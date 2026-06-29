@@ -1,9 +1,9 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: User Authentication
-- Last completed: Feature 1 — User Authentication (tested end-to-end, working)
-- Next task: Feature 2 — Question entity
+- Feature: Mock Interview Session
+- Last completed: Feature 2 — Question Bank (tested end-to-end, working)
+- Next task: Feature 3 — Mock Interview Session
 
 ## Features
 
@@ -22,12 +22,12 @@
 - [x] Route guard (redirect if not logged in)
 
 ### 2. Question Bank
-- [ ] Question entity (title, role, topic, difficulty)
-- [ ] QuestionRepository
-- [ ] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
-- [ ] Database seeder — pre-seed default questions across all roles
-- [ ] React question bank page for interviewers (add / edit / delete)
-- [ ] React question browse page for candidates (filter by role + topic)
+- [x] Question entity (title, role, topic, difficulty)
+- [x] QuestionRepository
+- [x] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
+- [x] Database seeder — pre-seed default questions across all roles
+- [x] React question bank page for interviewers (add / edit / delete)
+- [x] React question browse page for candidates (filter by role + topic)
 
 ### 3. Mock Interview Session
 - [ ] Session entity (interviewer, candidate, date, questions used, status)
@@ -47,6 +47,9 @@
 - [ ] Progress API (all sessions + scores per candidate)
 - [ ] React candidate dashboard: past sessions, scores per criteria, improvement over time
 - [ ] React interviewer view: candidate history across sessions
+
+## Docs
+- [x] docs folder created with all documents
 
 ## Decisions & Notes
 - Project generated via start.spring.io with: Spring Web, Spring Security, Spring Data JPA, MySQL Driver, Lombok, Validation
