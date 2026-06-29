@@ -48,6 +48,9 @@
 - [ ] React candidate dashboard: past sessions, scores per criteria, improvement over time
 - [ ] React interviewer view: candidate history across sessions
 
+## Docs
+- [x] docs folder created with all documents
+
 ## Decisions & Notes
 - Project generated via start.spring.io with: Spring Web, Spring Security, Spring Data JPA, MySQL Driver, Lombok, Validation
 - Java 17, Spring Boot 3.5.15, Maven
