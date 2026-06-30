@@ -1,9 +1,9 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: Progress Dashboard
-- Last completed: Feature 5 — Progress Dashboard (backend + frontend complete)
-- Next task: Test progress dashboard end-to-end, then update docs (README, setup.md, conventions, mark Feature 5 docs as built)
+- Feature: All 5 core features complete
+- Last completed: Feature 5 — Progress Dashboard (tested end-to-end, working)
+- Next task: Documentation cleanup — root README, fix stale setup.md, flag Feature 5 docs as built, add coding conventions doc
 
 ## Features
 
