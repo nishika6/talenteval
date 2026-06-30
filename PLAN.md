@@ -1,9 +1,9 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: Mock Interview Session
-- Last completed: Feature 2 — Question Bank (tested end-to-end, working)
-- Next task: Feature 3 — Mock Interview Session
+- Feature: Scorecard
+- Last completed: Feature 3 — Mock Interview Session (tested end-to-end, working)
+- Next task: Feature 4 — Scorecard
 
 ## Features
 
@@ -30,11 +30,11 @@
 - [x] React question browse page for candidates (filter by role + topic)
 
 ### 3. Mock Interview Session
-- [ ] Session entity (interviewer, candidate, date, questions used, status)
-- [ ] SessionRepository + SessionService + SessionController
-- [ ] API: start session, add questions, mark complete
-- [ ] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
-- [ ] React candidate view: see active session questions
+- [x] Session entity (interviewer, candidate, date, questions used, status)
+- [x] SessionRepository + SessionService + SessionController
+- [x] API: start session, add questions, mark complete
+- [x] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
+- [x] React candidate view: see active session questions
 
 ### 4. Scorecard
 - [ ] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)

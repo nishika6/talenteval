@@ -461,3 +461,50 @@
   color: var(--text-light);
   padding: 40px 0;
 }
+
+/* Session styles */
+.question-card.selected {
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.03);
+}
+
+.session-info {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-light);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.interview-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 700px;
+}
+
+.interview-progress {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+
+.interview-question {
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.interview-nav {
+  display: flex;
+  justify-content: space-between;
+}
