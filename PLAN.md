@@ -1,9 +1,9 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: Scorecard
-- Last completed: Feature 3 — Mock Interview Session (tested end-to-end, working)
-- Next task: Feature 4 — Scorecard
+- Feature: Progress Dashboard
+- Last completed: Feature 4 — Scorecard (tested end-to-end, working)
+- Next task: Feature 5 — Progress Dashboard
 
 ## Features
 
@@ -37,11 +37,11 @@
 - [x] React candidate view: see active session questions
 
 ### 4. Scorecard
-- [ ] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
-- [ ] ScorecardRepository + ScorecardService + ScorecardController
-- [ ] API: submit scorecard, fetch scorecard by session
-- [ ] React scorecard form for interviewers (4 criteria + comments)
-- [ ] React scorecard view for candidates (read-only)
+- [x] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
+- [x] ScorecardRepository + ScorecardService + ScorecardController
+- [x] API: submit scorecard, fetch scorecard by session
+- [x] React scorecard form for interviewers (4 criteria + comments)
+- [x] React scorecard view for candidates (read-only)
 
 ### 5. Progress Dashboard
 - [ ] Progress API (all sessions + scores per candidate)

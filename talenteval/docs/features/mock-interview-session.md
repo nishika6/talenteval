@@ -9,7 +9,7 @@ Enables interviewers to conduct structured mock interview sessions with candidat
 ### Starting a Session
 
 1. Interviewer navigates to the **Sessions** page and clicks "Start New Session."
-2. A list of registered candidates is shown. The interviewer selects one.
+2. React fetches the candidate list via `GET /api/users/candidates` and shows it. The interviewer selects one.
 3. React sends a `POST /api/sessions` request with the candidate's ID.
 4. The backend creates a new session record with the current interviewer, selected candidate, current timestamp, and status `IN_PROGRESS`.
 5. The interviewer is taken to the session setup screen.
@@ -31,17 +31,17 @@ Enables interviewers to conduct structured mock interview sessions with candidat
 
 ### Completing a Session
 
-1. After going through all questions, the interviewer clicks "Complete Session."
+1. After going through all questions, the interviewer clicks "Complete Session" (only shown on the last question).
 2. React sends a `PUT /api/sessions/{id}/complete` request.
 3. The backend changes the session status from `IN_PROGRESS` to `COMPLETED`.
 4. A completed session cannot have questions added or removed.
-5. The interviewer can now fill out a scorecard for this session.
+5. The interviewer is taken directly to the scorecard form for this session (see [scorecard.md](../features/scorecard.md)).
 
 ### Candidate View
 
-1. Candidates can see their active and past sessions on their Sessions page.
-2. For each session, they see the interviewer's name, date, status, and the questions that were used.
-3. Candidates cannot start sessions, add questions, or mark sessions complete.
+1. Candidates see all their sessions (past and active) on the same **Sessions** page, listed by interviewer name, date, and status.
+2. Clicking a session shows the questions used and, if completed, the scorecard.
+3. Candidates cannot start sessions, add questions, or mark sessions complete — the page renders read-only for them.
 
 ## Key Business Rules
 
