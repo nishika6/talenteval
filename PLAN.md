@@ -2,8 +2,8 @@
 
 ## Current Status
 - Feature: Progress Dashboard
-- Last completed: Feature 4 — Scorecard (tested end-to-end, working)
-- Next task: Feature 5 — Progress Dashboard
+- Last completed: Feature 5 — Progress Dashboard (backend + frontend complete)
+- Next task: Test progress dashboard end-to-end, then update docs (README, setup.md, conventions, mark Feature 5 docs as built)
 
 ## Features
 
@@ -44,9 +44,9 @@
 - [x] React scorecard view for candidates (read-only)
 
 ### 5. Progress Dashboard
-- [ ] Progress API (all sessions + scores per candidate)
-- [ ] React candidate dashboard: past sessions, scores per criteria, improvement over time
-- [ ] React interviewer view: candidate history across sessions
+- [x] Progress API (all sessions + scores per candidate)
+- [x] React candidate dashboard: past sessions, scores per criteria, improvement over time
+- [x] React interviewer view: candidate history across sessions
 
 ## Docs
 - [x] docs folder created with all documents
