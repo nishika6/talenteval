@@ -72,7 +72,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Error response (404 Not Found):**
+**Error response (400 Bad Request):**
 ```json
 {
   "error": "Question not found"
@@ -156,7 +156,7 @@ Update an existing question.
 }
 ```
 
-**Error response (404 Not Found):**
+**Error response (400 Bad Request):**
 ```json
 {
   "error": "Question not found"
@@ -185,7 +185,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Error response (404 Not Found):**
+**Error response (400 Bad Request):**
 ```json
 {
   "error": "Question not found"

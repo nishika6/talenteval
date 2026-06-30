@@ -1,9 +1,10 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: User Authentication
-- Last completed: Feature 1 — User Authentication (tested end-to-end, working)
-- Next task: Feature 2 — Question entity
+- Feature: All 5 core features complete
+- Last completed: Documentation cleanup on `main` (root README, conventions.md, fixed stale setup.md, fixed incorrect 404 status codes in API docs)
+- Next task: Merge feature branches (`feature/question-bank`, `feature/mock-interview`, `feature/scorecard`, `feature/dashboard`) into `main` so the code matches the docs
+- Note: Features 2-5 are fully built and tested but currently live only on their feature branches, not yet merged into `main`. `main` has Feature 1's code plus the full, up-to-date documentation.
 
 ## Features
 
@@ -21,35 +22,40 @@
 - [x] JWT stored in localStorage, Axios interceptor added
 - [x] Route guard (redirect if not logged in)
 
-### 2. Question Bank
-- [ ] Question entity (title, role, topic, difficulty)
-- [ ] QuestionRepository
-- [ ] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
-- [ ] Database seeder — pre-seed default questions across all roles
-- [ ] React question bank page for interviewers (add / edit / delete)
-- [ ] React question browse page for candidates (filter by role + topic)
+### 2. Question Bank (built on `feature/question-bank`, tested end-to-end — not yet merged to main)
+- [x] Question entity (title, role, topic, difficulty)
+- [x] QuestionRepository
+- [x] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
+- [x] Database seeder — pre-seed default questions across all roles
+- [x] React question bank page for interviewers (add / edit / delete)
+- [x] React question browse page for candidates (filter by role + topic)
 
-### 3. Mock Interview Session
-- [ ] Session entity (interviewer, candidate, date, questions used, status)
-- [ ] SessionRepository + SessionService + SessionController
-- [ ] API: start session, add questions, mark complete
-- [ ] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
-- [ ] React candidate view: see active session questions
+### 3. Mock Interview Session (built on `feature/mock-interview`, tested end-to-end — not yet merged to main)
+- [x] Session entity (interviewer, candidate, date, questions used, status)
+- [x] SessionRepository + SessionService + SessionController
+- [x] API: start session, add questions, mark complete
+- [x] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
+- [x] React candidate view: see active session questions
 
-### 4. Scorecard
-- [ ] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
-- [ ] ScorecardRepository + ScorecardService + ScorecardController
-- [ ] API: submit scorecard, fetch scorecard by session
-- [ ] React scorecard form for interviewers (4 criteria + comments)
-- [ ] React scorecard view for candidates (read-only)
+### 4. Scorecard (built on `feature/scorecard`, tested end-to-end — not yet merged to main)
+- [x] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
+- [x] ScorecardRepository + ScorecardService + ScorecardController
+- [x] API: submit scorecard, fetch scorecard by session
+- [x] React scorecard form for interviewers (4 criteria + comments)
+- [x] React scorecard view for candidates (read-only)
 
-### 5. Progress Dashboard
-- [ ] Progress API (all sessions + scores per candidate)
-- [ ] React candidate dashboard: past sessions, scores per criteria, improvement over time
-- [ ] React interviewer view: candidate history across sessions
+### 5. Progress Dashboard (built on `feature/dashboard`, tested end-to-end — not yet merged to main)
+- [x] Progress API (all sessions + scores per candidate)
+- [x] React candidate dashboard: past sessions, scores per criteria, improvement over time
+- [x] React interviewer view: candidate history across sessions
 
 ## Docs
 - [x] docs folder created with all documents
+- [x] Root README.md (entry point for new developers)
+- [x] docs/conventions.md (coding conventions used throughout the codebase)
+- [x] setup.md updated to reflect DB_USERNAME/DB_PASSWORD env vars (was hardcoded password)
+- [x] Fixed incorrect 404 status codes in question-api.md, scorecard-api.md, progress-api.md (actual behavior is 400 — GlobalExceptionHandler always returns 400 for IllegalArgumentException)
+- [x] API + feature docs kept in sync with actual implementation for all 5 features
 
 ## Decisions & Notes
 - Project generated via start.spring.io with: Spring Web, Spring Security, Spring Data JPA, MySQL Driver, Lombok, Validation
