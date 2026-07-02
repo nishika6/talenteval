@@ -16,4 +16,5 @@ public class SessionProgressResponse {
     private int structure;
     private int content;
     private int confidence;
+    private String comments;
 }

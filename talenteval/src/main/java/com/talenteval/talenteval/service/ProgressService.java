@@ -38,7 +38,8 @@ public class ProgressService {
                         sc.getCommunication(),
                         sc.getStructure(),
                         sc.getContent(),
-                        sc.getConfidence()
+                        sc.getConfidence(),
+                        sc.getComments()
                 ))
                 .toList();
 

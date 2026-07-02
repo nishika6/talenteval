@@ -141,6 +141,12 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
+                    {s.comments && (
+                      <div className="scorecard-comments" style={{ marginTop: '12px' }}>
+                        <p style={{ fontWeight: 600, marginBottom: '4px', fontSize: '13px' }}>Interviewer Comments</p>
+                        <p>{s.comments}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
