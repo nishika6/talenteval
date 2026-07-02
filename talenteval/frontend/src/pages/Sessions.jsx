@@ -207,7 +207,7 @@ export default function Sessions() {
           </div>
           <div className="filters" style={{ marginBottom: '24px' }}>
             <label style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '6px', display: 'block' }}>
-              Schedule date &amp; time (optional)
+              Schedule date &amp; time
             </label>
             <input
               type="datetime-local"
