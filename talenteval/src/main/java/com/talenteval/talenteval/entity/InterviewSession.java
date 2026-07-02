@@ -31,6 +31,9 @@ public class InterviewSession {
     @Column(nullable = false)
     private LocalDateTime date;
 
+    @Column
+    private LocalDateTime scheduledAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SessionStatus status;

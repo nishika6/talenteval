@@ -26,6 +26,7 @@ export default function Sessions() {
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [filterRole, setFilterRole] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
 
   // Scorecard
   const [scorecard, setScorecard] = useState(null);
@@ -63,7 +64,9 @@ export default function Sessions() {
 
   const selectCandidate = async (candidateId) => {
     try {
-      const res = await api.post('/sessions', { candidateId });
+      const body = { candidateId };
+      if (scheduledAt) body.scheduledAt = scheduledAt;
+      const res = await api.post('/sessions', body);
       setActiveSession(res.data);
       const qRes = await api.get('/questions', { params: filterRole ? { role: filterRole } : {} });
       setQuestions(qRes.data);
@@ -151,6 +154,7 @@ export default function Sessions() {
     setStep(null);
     setActiveSession(null);
     setScorecard(null);
+    setScheduledAt('');
     fetchSessions();
   };
 
@@ -186,6 +190,11 @@ export default function Sessions() {
 
   const statusClass = (s) => s === 'COMPLETED' ? 'badge badge-easy' : 'badge badge-medium';
 
+  const formatDateTime = (d) => new Date(d).toLocaleString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
   // Select candidate step
   if (step === 'select-candidate') {
     return (
@@ -195,6 +204,16 @@ export default function Sessions() {
           <div className="page-header">
             <h2>Select a Candidate</h2>
             <button className="btn btn-secondary" onClick={goBack}>Cancel</button>
+          </div>
+          <div className="filters" style={{ marginBottom: '24px' }}>
+            <label style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '6px', display: 'block' }}>
+              Schedule date &amp; time (optional)
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+            />
           </div>
           {candidates.length === 0 ? (
             <p className="empty-text">No candidates registered yet.</p>
@@ -339,6 +358,9 @@ export default function Sessions() {
           <div className="session-info">
             <span>Interviewer: <strong>{activeSession.interviewerName}</strong></span>
             <span>Candidate: <strong>{activeSession.candidateName}</strong></span>
+            {activeSession.scheduledAt && (
+              <span>Scheduled: <strong>{formatDateTime(activeSession.scheduledAt)}</strong></span>
+            )}
             <span className={statusClass(activeSession.status)}>{activeSession.status.replace('_', ' ')}</span>
           </div>
 
@@ -439,12 +461,11 @@ export default function Sessions() {
                     {isInterviewer ? s.candidateName : s.interviewerName}
                   </p>
                   <div className="question-meta">
-                    <span className="badge badge-topic">
-                      {new Date(s.date).toLocaleDateString('en-IN', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                      })}
-                    </span>
+                    {s.scheduledAt ? (
+                      <span className="badge badge-topic">Scheduled: {formatDateTime(s.scheduledAt)}</span>
+                    ) : (
+                      <span className="badge badge-topic">Created: {formatDateTime(s.date)}</span>
+                    )}
                     <span className={statusClass(s.status)}>{s.status.replace('_', ' ')}</span>
                     <span className="badge badge-role">{s.questions.length} questions</span>
                   </div>

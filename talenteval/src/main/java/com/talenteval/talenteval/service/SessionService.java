@@ -36,6 +36,7 @@ public class SessionService {
                 .interviewer(interviewer)
                 .candidate(candidate)
                 .date(LocalDateTime.now())
+                .scheduledAt(request.getScheduledAt())
                 .status(SessionStatus.IN_PROGRESS)
                 .build();
 
@@ -140,6 +141,7 @@ public class SessionService {
                 session.getCandidate().getId(),
                 session.getCandidate().getName(),
                 session.getDate(),
+                session.getScheduledAt(),
                 session.getStatus().name(),
                 questions
         );
