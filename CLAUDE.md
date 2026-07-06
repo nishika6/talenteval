@@ -11,7 +11,7 @@ TalentEval is a full-stack mock interview and talent evaluation platform. Two ro
 - **Backend:** Spring Boot 3.5.15, Spring Security, JWT (JJWT 0.12.6), Spring Data JPA, Hibernate, MySQL, Lombok, Bean Validation
 - **Frontend:** React (Vite), Axios, React Router
 - **Java:** 17 | **Build:** Maven | **Base package:** `com.talenteval.talenteval`
-- **Working directory:** `c:\Users\amana\Downloads\talenteval\talenteval\`
+- **Working directory:** `d:\nishika original\talenteval\talenteval\`
 
 ---
 
@@ -53,10 +53,12 @@ Vite may start on port 5173 or 5174 (if 5173 is taken). Both are allowed in `Sec
 
 | Branch | Contains |
 |---|---|
-| `main` | Feature 1 (auth) + docs folder (README, docs/, conventions.md, PLAN.md) |
-| `feature/dashboard` | All 5 features + dark mode (dark mode not yet committed as of last session) |
+| `main` | Feature 1 (auth) + docs folder (README, docs/, conventions.md, PLAN.md, CLAUDE.md) |
+| `feature/dashboard` | Superseded — Features 1–5 + dark mode. Left as-is, not used going forward. |
+| `feature/email-notifications` | Stale/superseded — branched off `main` early, missing everything from `feature/dashboard` onward. Do not merge, it would delete newer work. |
+| `feature/scheduler` | **Current tip of development.** All 8 features + dark mode + scheduler + email notifications + upcoming-sessions dashboard. |
 
-All active development is on `feature/dashboard`. When merging into `main`, expect doc merge conflicts — they are normal and resolvable.
+All active development is on `feature/scheduler`. `CLAUDE.md` and other docs live only on `main` (feature branches don't carry them) — when merging a feature branch into `main`, expect doc-only merge conflicts on files like `PLAN.md`; they are normal and resolvable by keeping `main`'s side and re-adding the feature-branch content.
 
 ---
 
@@ -100,6 +102,24 @@ All active development is on `feature/dashboard`. When merging into `main`, expe
 - `SessionProgressResponse` DTO has `comments` field; `ProgressService` maps `sc.getComments()`
 - Comments are conditionally rendered in `Dashboard.jsx` only when non-null
 
+### 7. Scheduler ✅
+- `scheduledAt` (nullable `LocalDateTime`) added to `InterviewSession` entity
+- Interviewer picks date & time via a `datetime-local` input when creating a session
+- Session list cards and session view show scheduled time if set, creation time (`date`) otherwise
+
+### 8. Email Notifications ✅
+- `spring-boot-starter-mail` + `JavaMailSender`, SMTP config entirely via env vars (`MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`)
+- `@EnableAsync` on `TalentevalApplication` — `EmailService` methods are `@Async`, emails send in the background and never block the API response
+- `EmailService.notifyCandidate()` fires on session creation (includes scheduled time if set); `EmailService.notifyInterviewer()` fires when the candidate completes their session
+- This is what made the session-completion flow async on both sides: `PUT /sessions/{id}/complete` has no `@PreAuthorize` — `SessionService.completeSession()` now checks the caller's role internally and allows either the interviewer or the candidate to complete a session, branching only the ownership check and the "who gets emailed" logic
+- Candidate sees a "Complete Session" button on the last question of their session view; completing returns them to the session list, while an interviewer completing goes straight to the scorecard form
+
+### 9. Upcoming Sessions on Dashboard ✅
+- No backend changes — pure frontend aggregation over the existing `GET /sessions` response
+- Candidate view: "Upcoming Sessions" section — sessions that are scheduled and not yet completed, with interviewer name, scheduled date/time, and a "Go to Session" button
+- Interviewer view: separate "Upcoming Sessions" and "Recently Completed" (last 5) sections, each with candidate name, date/time, status badge, and a "View Session" button — kept as two distinct sections rather than one merged list so a "COMPLETED" badge never shows up under an "Upcoming" heading
+- Buttons navigate to `/sessions` passing the target session id via React Router `state` (`{ openSessionId }`); `Sessions.jsx` reads `location.state.openSessionId` on mount and auto-opens that session
+
 ---
 
 ## Features in progress
@@ -111,20 +131,16 @@ All active development is on `feature/dashboard`. When merging into `main`, expe
 - Stored in local server storage; new `SessionRecording` entity tracks (sessionId, questionId, filePath)
 - Interviewer sees audio playback per question in session review page before filling scorecard
 
-### Email Notifications — TODO
-- `spring-boot-starter-mail` + `JavaMailSender`
-- SMTP config via env vars (never hardcoded)
-- Email to candidate when session is assigned
-- Email to interviewer when candidate completes their session
-
 ---
 
 ## Key architecture decisions
 
 ### Two-layer authorization
-Every write operation on sessions/scorecards has two checks:
+Most write operations on sessions/scorecards have two checks:
 1. `@PreAuthorize("hasRole('INTERVIEWER')")` on the controller — role check from JWT, cheap
 2. Manual ownership check in the service layer — "is this caller the interviewer of *this* session?" — requires a DB query
+
+Exception: `PUT /sessions/{id}/complete` has no `@PreAuthorize` since either role can complete a session. `SessionService.completeSession()` does the role check itself (interviewer must own the session vs. candidate must be the session's candidate) and only emails the interviewer when a candidate is the one completing it.
 
 ### Security config
 - `/api/auth/**` → public (no JWT required)
@@ -145,6 +161,12 @@ Separate `@Entity` (not `@ManyToMany`) so `questionOrder` can be stored as a col
 ### ProgressService
 No new table. Fetches all `Scorecard` rows for a candidate ordered by session date, computes per-criterion averages with `round1()`, returns `ProgressResponse` with a list of `SessionProgressResponse` (one per scored session, includes comments).
 
+### EmailService
+`@Service` wrapping `JavaMailSender`, both public methods marked `@Async` so callers (`SessionService`) never wait on SMTP. Uses `SimpleMailMessage` (plain text, no templates). Failures are not currently caught/retried — an SMTP error surfaces as an async exception logged by Spring, it does not fail the originating request since it's already returned.
+
+### Dashboard "Upcoming Sessions"
+`Dashboard.jsx` fetches `GET /sessions` (same endpoint `Sessions.jsx` uses) and derives `upcoming` / `recentlyCompleted` client-side with `.filter()`/`.sort()` — no new DTO or endpoint. Kept as a derived-on-render computation rather than `useMemo` since the session list is small and this isn't a perf-sensitive path.
+
 ---
 
 ## DB schema (auto-managed by Hibernate `ddl-auto=update`)
@@ -153,7 +175,7 @@ No new table. Fetches all `Scorecard` rows for a candidate ordered by session da
 |---|---|
 | `users` | id, name, email (unique), password (BCrypt), role |
 | `questions` | id, title, role, topic, difficulty |
-| `sessions` | id, interviewer_id, candidate_id, date, status |
+| `sessions` | id, interviewer_id, candidate_id, date, scheduled_at, status |
 | `session_questions` | id, session_id, question_id, question_order |
 | `scorecards` | id, session_id (unique), candidate_id, communication, structure, content, confidence, comments |
 
@@ -168,4 +190,14 @@ spring.datasource.password=${DB_PASSWORD}
 spring.jpa.hibernate.ddl-auto=update
 jwt.secret=TalentEvalSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm
 jwt.expiration=86400000
+
+# Mail
+spring.mail.host=${MAIL_HOST:smtp.gmail.com}
+spring.mail.port=${MAIL_PORT:587}
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_PASSWORD}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
 ```
+
+Local secrets (DB + mail credentials) are kept in a git-ignored `application-local.properties`, run with `-Dspring-boot.run.profiles=local` or equivalent, rather than typed into every PowerShell session by hand.
