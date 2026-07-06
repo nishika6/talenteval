@@ -1,10 +1,8 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: All 5 core features complete
-- Last completed: Documentation cleanup on `main` (root README, conventions.md, fixed stale setup.md, fixed incorrect 404 status codes in API docs)
-- Next task: Merge feature branches (`feature/question-bank`, `feature/mock-interview`, `feature/scorecard`, `feature/dashboard`) into `main` so the code matches the docs
-- Note: Features 2-5 are fully built and tested but currently live only on their feature branches, not yet merged into `main`. `main` has Feature 1's code plus the full, up-to-date documentation.
+- Feature: 7 features complete
+- Last completed: Feature 7 — Email Notifications + async candidate session completion
 
 ## Features
 
@@ -22,7 +20,7 @@
 - [x] JWT stored in localStorage, Axios interceptor added
 - [x] Route guard (redirect if not logged in)
 
-### 2. Question Bank (built on `feature/question-bank`, tested end-to-end — not yet merged to main)
+### 2. Question Bank
 - [x] Question entity (title, role, topic, difficulty)
 - [x] QuestionRepository
 - [x] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
@@ -30,32 +28,45 @@
 - [x] React question bank page for interviewers (add / edit / delete)
 - [x] React question browse page for candidates (filter by role + topic)
 
-### 3. Mock Interview Session (built on `feature/mock-interview`, tested end-to-end — not yet merged to main)
+### 3. Mock Interview Session
 - [x] Session entity (interviewer, candidate, date, questions used, status)
 - [x] SessionRepository + SessionService + SessionController
 - [x] API: start session, add questions, mark complete
 - [x] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
 - [x] React candidate view: see active session questions
 
-### 4. Scorecard (built on `feature/scorecard`, tested end-to-end — not yet merged to main)
+### 4. Scorecard
 - [x] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
 - [x] ScorecardRepository + ScorecardService + ScorecardController
 - [x] API: submit scorecard, fetch scorecard by session
 - [x] React scorecard form for interviewers (4 criteria + comments)
 - [x] React scorecard view for candidates (read-only)
 
-### 5. Progress Dashboard (built on `feature/dashboard`, tested end-to-end — not yet merged to main)
+### 5. Progress Dashboard
 - [x] Progress API (all sessions + scores per candidate)
 - [x] React candidate dashboard: past sessions, scores per criteria, improvement over time
 - [x] React interviewer view: candidate history across sessions
 
+### 6. Scheduler
+- [x] Added `scheduledAt` field (nullable LocalDateTime) to InterviewSession entity
+- [x] SessionRequest accepts optional `scheduledAt` from frontend
+- [x] SessionResponse includes `scheduledAt` in all session responses
+- [x] Interviewer picks date & time when selecting a candidate (datetime-local input)
+- [x] Session list cards show scheduled time if set, creation time otherwise
+- [x] Session view shows scheduled time in session-info row for both roles
+
+### 7. Email Notifications
+- [x] Added spring-boot-starter-mail dependency
+- [x] SMTP configured via env vars: MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
+- [x] @EnableAsync on main app class — emails send in background, don't block API
+- [x] EmailService: notifyCandidate() — fires on session creation, includes scheduled time if set
+- [x] EmailService: notifyInterviewer() — fires when candidate completes their session
+- [x] Async session flow: candidates can now call PUT /sessions/{id}/complete
+- [x] Candidate "Complete Session" button shown on last question of their session view
+- [x] After candidate completes: returns to session list; after interviewer completes: scorecard form
+
 ## Docs
 - [x] docs folder created with all documents
-- [x] Root README.md (entry point for new developers)
-- [x] docs/conventions.md (coding conventions used throughout the codebase)
-- [x] setup.md updated to reflect DB_USERNAME/DB_PASSWORD env vars (was hardcoded password)
-- [x] Fixed incorrect 404 status codes in question-api.md, scorecard-api.md, progress-api.md (actual behavior is 400 — GlobalExceptionHandler always returns 400 for IllegalArgumentException)
-- [x] API + feature docs kept in sync with actual implementation for all 5 features
 
 ## Decisions & Notes
 - Project generated via start.spring.io with: Spring Web, Spring Security, Spring Data JPA, MySQL Driver, Lombok, Validation
