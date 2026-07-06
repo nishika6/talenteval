@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
@@ -12,6 +13,7 @@ const CRITERIA = [
 
 export default function Sessions() {
   const { user } = useAuth();
+  const location = useLocation();
   const isInterviewer = user.role === 'INTERVIEWER';
 
   const [sessions, setSessions] = useState([]);
@@ -50,7 +52,12 @@ export default function Sessions() {
     }
   };
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => {
+    fetchSessions();
+    if (location.state?.openSessionId) {
+      viewSession(location.state.openSessionId);
+    }
+  }, []);
 
   const startNewSession = async () => {
     try {
@@ -111,11 +118,15 @@ export default function Sessions() {
     try {
       const res = await api.put(`/sessions/${activeSession.id}/complete`);
       setActiveSession(res.data);
-      setScorecard(null);
-      setScorecardChecked(true);
-      setScorecardForm({ communication: 0, structure: 0, content: 0, confidence: 0, comments: '' });
-      setScorecardError('');
-      setStep('scorecard-form');
+      if (isInterviewer) {
+        setScorecard(null);
+        setScorecardChecked(true);
+        setScorecardForm({ communication: 0, structure: 0, content: 0, confidence: 0, comments: '' });
+        setScorecardError('');
+        setStep('scorecard-form');
+      } else {
+        goBack();
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to complete session');
     }
@@ -338,7 +349,7 @@ export default function Sessions() {
     const qs = activeSession.questions;
     const current = qs[currentQ];
     const isLast = currentQ === qs.length - 1;
-    const canComplete = isInterviewer && activeSession.status === 'IN_PROGRESS';
+    const canComplete = activeSession.status === 'IN_PROGRESS';
     const canFillScorecard = isInterviewer && activeSession.status === 'COMPLETED'
       && scorecardChecked && !scorecard;
 
