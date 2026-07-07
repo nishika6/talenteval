@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -38,6 +38,16 @@ export default function Sessions() {
   });
   const [scorecardError, setScorecardError] = useState('');
 
+  // Voice recording
+  const [recordings, setRecordings] = useState([]);
+  const [audioUrls, setAudioUrls] = useState({});
+  const [isRecording, setIsRecording] = useState(false);
+  const [uploadingRecording, setUploadingRecording] = useState(false);
+  const [recordingError, setRecordingError] = useState('');
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
+
   const roles = ['HR', 'UX', 'PM', 'FINANCE', 'ENGINEERING'];
 
   const fetchSessions = async () => {
@@ -58,6 +68,86 @@ export default function Sessions() {
       viewSession(location.state.openSessionId);
     }
   }, []);
+
+  const fetchRecordings = async (sessionId) => {
+    try {
+      const res = await api.get(`/sessions/${sessionId}/recordings`);
+      setRecordings(res.data);
+    } catch {
+      setRecordings([]);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSession && (step === 'interview' || step === 'view')) {
+      setAudioUrls({});
+      fetchRecordings(activeSession.id);
+    }
+  }, [activeSession?.id, step]);
+
+  const recordedIds = new Set(recordings.map(r => r.questionId));
+
+  useEffect(() => {
+    if (isInterviewer && step === 'view' && activeSession?.status === 'COMPLETED') {
+      const current = activeSession.questions[currentQ];
+      if (current && !audioUrls[current.id]) {
+        const rec = recordings.find(r => r.questionId === current.id);
+        if (rec) {
+          api.get(rec.url, { responseType: 'blob' })
+            .then(res => {
+              const url = URL.createObjectURL(res.data);
+              setAudioUrls(prev => ({ ...prev, [current.id]: url }));
+            })
+            .catch(() => {});
+        }
+      }
+    }
+  }, [currentQ, recordings, step]);
+
+  const startRecording = async () => {
+    setRecordingError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        uploadRecording();
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      setRecordingError('Microphone access is required to record your answer.');
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const uploadRecording = async () => {
+    const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+    const current = activeSession.questions[currentQ];
+    setUploadingRecording(true);
+    setRecordingError('');
+    try {
+      const formData = new FormData();
+      formData.append('questionId', current.id);
+      formData.append('file', blob, `question-${current.id}.webm`);
+      await api.post(`/sessions/${activeSession.id}/recordings`, formData);
+      await fetchRecordings(activeSession.id);
+    } catch {
+      setRecordingError('Failed to upload recording. Please try again.');
+    } finally {
+      setUploadingRecording(false);
+    }
+  };
 
   const startNewSession = async () => {
     try {
@@ -166,6 +256,10 @@ export default function Sessions() {
     setActiveSession(null);
     setScorecard(null);
     setScheduledAt('');
+    setRecordings([]);
+    setAudioUrls({});
+    setIsRecording(false);
+    setRecordingError('');
     fetchSessions();
   };
 
@@ -350,6 +444,7 @@ export default function Sessions() {
     const current = qs[currentQ];
     const isLast = currentQ === qs.length - 1;
     const canComplete = activeSession.status === 'IN_PROGRESS';
+    const allRecorded = qs.length > 0 && recordedIds.size >= qs.length;
     const canFillScorecard = isInterviewer && activeSession.status === 'COMPLETED'
       && scorecardChecked && !scorecard;
 
@@ -387,12 +482,42 @@ export default function Sessions() {
                   <span className="badge badge-topic">{current.topic}</span>
                   <span className={`badge badge-${current.difficulty.toLowerCase()}`}>{current.difficulty}</span>
                 </div>
+
+                {!isInterviewer && activeSession.status === 'IN_PROGRESS' && (
+                  <div style={{ marginTop: '20px' }}>
+                    {recordingError && <div className="auth-error">{recordingError}</div>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {recordedIds.has(current.id) && !isRecording && (
+                        <span className="badge badge-easy">Recorded ✓</span>
+                      )}
+                      {isRecording ? (
+                        <button className="btn btn-primary" onClick={stopRecording}>Stop Recording</button>
+                      ) : (
+                        <button className="btn btn-secondary" onClick={startRecording} disabled={uploadingRecording}>
+                          {uploadingRecording ? 'Uploading...' : recordedIds.has(current.id) ? 'Re-record' : 'Start Recording'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {isInterviewer && activeSession.status === 'COMPLETED' && audioUrls[current.id] && (
+                  <div style={{ marginTop: '20px' }}>
+                    <audio controls src={audioUrls[current.id]} style={{ width: '100%' }} />
+                  </div>
+                )}
               </div>
               <div className="interview-nav">
                 <button className="btn btn-secondary" onClick={() => setCurrentQ(currentQ - 1)}
                         disabled={currentQ === 0}>Previous</button>
                 {isLast && canComplete ? (
-                  <button className="btn btn-primary" onClick={completeSession}>Complete Session</button>
+                  isInterviewer || allRecorded ? (
+                    <button className="btn btn-primary" onClick={completeSession}>Complete Session</button>
+                  ) : (
+                    <span style={{ fontSize: '14px', color: 'var(--text-light)' }}>
+                      Record your answer to finish
+                    </span>
+                  )
                 ) : (
                   <button className="btn btn-primary" onClick={() => setCurrentQ(currentQ + 1)}
                           disabled={isLast}>Next</button>
