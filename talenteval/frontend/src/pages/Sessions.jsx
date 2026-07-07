@@ -3,6 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
 
+const CRITERIA = [
+  { key: 'communication', label: 'Communication' },
+  { key: 'structure', label: 'Structure' },
+  { key: 'content', label: 'Content' },
+  { key: 'confidence', label: 'Confidence' },
+];
+
 export default function Sessions() {
   const { user } = useAuth();
   const isInterviewer = user.role === 'INTERVIEWER';
@@ -12,13 +19,21 @@ export default function Sessions() {
   const [error, setError] = useState('');
 
   // New session flow
-  const [step, setStep] = useState(null); // null | 'select-candidate' | 'pick-questions' | 'interview' | 'view'
+  const [step, setStep] = useState(null); // null | 'select-candidate' | 'pick-questions' | 'interview' | 'view' | 'scorecard-form'
   const [candidates, setCandidates] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [filterRole, setFilterRole] = useState('');
+
+  // Scorecard
+  const [scorecard, setScorecard] = useState(null);
+  const [scorecardChecked, setScorecardChecked] = useState(false);
+  const [scorecardForm, setScorecardForm] = useState({
+    communication: 0, structure: 0, content: 0, confidence: 0, comments: ''
+  });
+  const [scorecardError, setScorecardError] = useState('');
 
   const roles = ['HR', 'UX', 'PM', 'FINANCE', 'ENGINEERING'];
 
@@ -91,12 +106,27 @@ export default function Sessions() {
 
   const completeSession = async () => {
     try {
-      await api.put(`/sessions/${activeSession.id}/complete`);
-      setStep(null);
-      setActiveSession(null);
-      fetchSessions();
+      const res = await api.put(`/sessions/${activeSession.id}/complete`);
+      setActiveSession(res.data);
+      setScorecard(null);
+      setScorecardChecked(true);
+      setScorecardForm({ communication: 0, structure: 0, content: 0, confidence: 0, comments: '' });
+      setScorecardError('');
+      setStep('scorecard-form');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to complete session');
+    }
+  };
+
+  const loadScorecard = async (sessionId) => {
+    setScorecardChecked(false);
+    try {
+      const res = await api.get(`/scorecards/session/${sessionId}`);
+      setScorecard(res.data);
+    } catch {
+      setScorecard(null);
+    } finally {
+      setScorecardChecked(true);
     }
   };
 
@@ -106,6 +136,12 @@ export default function Sessions() {
       setActiveSession(res.data);
       setCurrentQ(0);
       setStep('view');
+      if (res.data.status === 'COMPLETED') {
+        loadScorecard(sessionId);
+      } else {
+        setScorecard(null);
+        setScorecardChecked(true);
+      }
     } catch {
       setError('Failed to load session');
     }
@@ -114,6 +150,38 @@ export default function Sessions() {
   const goBack = () => {
     setStep(null);
     setActiveSession(null);
+    setScorecard(null);
+    fetchSessions();
+  };
+
+  const setRating = (key, value) => {
+    setScorecardForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const submitScorecard = async () => {
+    setScorecardError('');
+    const { communication, structure, content, confidence } = scorecardForm;
+    if (!communication || !structure || !content || !confidence) {
+      setScorecardError('Please rate all four criteria before submitting.');
+      return;
+    }
+    try {
+      const res = await api.post('/scorecards', {
+        sessionId: activeSession.id,
+        ...scorecardForm
+      });
+      setScorecard(res.data);
+      setStep('view');
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.error) {
+        setScorecardError(data.error);
+      } else if (typeof data === 'object') {
+        setScorecardError(Object.values(data).join('. '));
+      } else {
+        setScorecardError('Failed to submit scorecard');
+      }
+    }
   };
 
   const statusClass = (s) => s === 'COMPLETED' ? 'badge badge-easy' : 'badge badge-medium';
@@ -194,12 +262,66 @@ export default function Sessions() {
     );
   }
 
+  // Scorecard form step
+  if (step === 'scorecard-form') {
+    return (
+      <div className="dashboard">
+        <Navbar />
+        <div className="page-container">
+          <div className="page-header">
+            <h2>Scorecard for {activeSession.candidateName}</h2>
+            <button className="btn btn-secondary" onClick={goBack}>Skip for Now</button>
+          </div>
+
+          <div className="interview-card">
+            {scorecardError && <div className="auth-error">{scorecardError}</div>}
+
+            {CRITERIA.map(c => (
+              <div className="rating-row" key={c.key}>
+                <label>{c.label}</label>
+                <div className="rating-buttons">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button
+                      type="button"
+                      key={n}
+                      className={`rating-btn ${scorecardForm[c.key] === n ? 'active' : ''}`}
+                      onClick={() => setRating(c.key, n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="form-group" style={{ marginTop: '20px' }}>
+              <label htmlFor="comments">Comments (optional)</label>
+              <textarea
+                id="comments"
+                rows={4}
+                value={scorecardForm.comments}
+                onChange={(e) => setScorecardForm({ ...scorecardForm, comments: e.target.value })}
+                placeholder="Additional feedback for the candidate..."
+              />
+            </div>
+
+            <div className="form-actions">
+              <button className="btn btn-primary" onClick={submitScorecard}>Submit Scorecard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Interview / View step
   if (step === 'interview' || step === 'view') {
     const qs = activeSession.questions;
     const current = qs[currentQ];
     const isLast = currentQ === qs.length - 1;
     const canComplete = isInterviewer && activeSession.status === 'IN_PROGRESS';
+    const canFillScorecard = isInterviewer && activeSession.status === 'COMPLETED'
+      && scorecardChecked && !scorecard;
 
     return (
       <div className="dashboard">
@@ -246,6 +368,43 @@ export default function Sessions() {
             </div>
           ) : (
             <p className="empty-text">No questions in this session.</p>
+          )}
+
+          {activeSession.status === 'COMPLETED' && scorecardChecked && (
+            <div className="scorecard-section">
+              <h3 style={{ marginBottom: '16px' }}>Scorecard</h3>
+              {scorecard ? (
+                <div className="interview-card">
+                  <div className="scorecard-ratings">
+                    {CRITERIA.map(c => (
+                      <div className="scorecard-rating-item" key={c.key}>
+                        <span className="scorecard-rating-label">{c.label}</span>
+                        <span className="scorecard-rating-value">{scorecard[c.key]} / 5</span>
+                      </div>
+                    ))}
+                  </div>
+                  {scorecard.comments && (
+                    <div className="scorecard-comments">
+                      <p style={{ fontWeight: 600, marginBottom: '6px' }}>Comments</p>
+                      <p>{scorecard.comments}</p>
+                    </div>
+                  )}
+                </div>
+              ) : canFillScorecard ? (
+                <div className="interview-card" style={{ textAlign: 'center' }}>
+                  <p style={{ marginBottom: '16px', color: '#6b7280' }}>
+                    No scorecard submitted yet for this session.
+                  </p>
+                  <button className="btn btn-primary" onClick={() => {
+                    setScorecardForm({ communication: 0, structure: 0, content: 0, confidence: 0, comments: '' });
+                    setScorecardError('');
+                    setStep('scorecard-form');
+                  }}>Fill Scorecard</button>
+                </div>
+              ) : (
+                <p className="empty-text">Scorecard not yet submitted.</p>
+              )}
+            </div>
           )}
         </div>
       </div>

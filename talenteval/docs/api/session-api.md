@@ -6,6 +6,39 @@ All endpoints require a valid JWT in the `Authorization: Bearer <token>` header.
 
 ---
 
+## GET /api/users/candidates
+
+Get all registered candidates, used by the interviewer to pick who to interview when starting a session.
+
+**Role required:** INTERVIEWER only
+
+**Example request:**
+```
+GET /api/users/candidates
+Authorization: Bearer <token>
+```
+
+**Success response (200 OK):**
+
+```json
+[
+  {
+    "id": 3,
+    "name": "Priya Sharma",
+    "email": "priya@example.com",
+    "role": "CANDIDATE"
+  },
+  {
+    "id": 4,
+    "name": "Arjun Mehta",
+    "email": "arjun@example.com",
+    "role": "CANDIDATE"
+  }
+]
+```
+
+---
+
 ## POST /api/sessions
 
 Start a new mock interview session.
