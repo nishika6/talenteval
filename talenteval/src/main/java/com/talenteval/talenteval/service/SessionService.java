@@ -20,6 +20,7 @@ public class SessionService {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final EmailService emailService;
+    private final RecordingService recordingService;
 
     @Transactional
     public SessionResponse createSession(String interviewerEmail, SessionRequest request) {
@@ -99,6 +100,10 @@ public class SessionService {
 
         if (session.getStatus() == SessionStatus.COMPLETED) {
             throw new IllegalArgumentException("Session is already completed");
+        }
+
+        if (caller.getRole() == Role.CANDIDATE && !recordingService.isFullyRecorded(session)) {
+            throw new IllegalArgumentException("Please record all questions before completing the session");
         }
 
         session.setStatus(SessionStatus.COMPLETED);
