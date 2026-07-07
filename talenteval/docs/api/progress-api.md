@@ -128,7 +128,7 @@ Authorization: Bearer <token>
 
 **Error responses:**
 
-*Candidate not found (404 Not Found):*
+*Candidate not found (400 Bad Request):*
 ```json
 {
   "error": "Candidate not found"
