@@ -8,9 +8,9 @@ After completing a mock interview session, the interviewer fills out a structure
 
 ### Filling Out a Scorecard
 
-1. After marking a session as completed, the interviewer is prompted to fill out a scorecard.
-2. The scorecard form shows four rating fields (Communication, Structure, Content, Confidence), each with a 1-5 scale, and an optional comments text area.
-3. The interviewer rates each criterion and optionally writes feedback.
+1. Immediately after marking a session as completed, the interviewer is taken straight to the scorecard form (they can choose "Skip for Now" to fill it in later instead).
+2. The scorecard form shows four rating selectors (Communication, Structure, Content, Confidence), each a 1-5 button group, and an optional comments text area.
+3. The interviewer rates each criterion and optionally writes feedback. All four ratings must be selected before submitting.
 4. React sends a `POST /api/scorecards` request with the session ID, four ratings, and comments.
 5. The backend validates that:
    - The session exists and is completed.
@@ -18,7 +18,12 @@ After completing a mock interview session, the interviewer fills out a structure
    - No scorecard already exists for this session.
    - All ratings are between 1 and 5.
 6. The scorecard is saved to the `scorecards` table, linked to both the session and the candidate.
-7. A confirmation is shown to the interviewer.
+7. The interviewer is taken to the session view, which now shows the scorecard inline.
+
+### Filling Out a Scorecard Later
+
+1. If the interviewer skips the scorecard right after completing the session, the session shows a "Fill Scorecard" prompt the next time they open it (as long as no scorecard exists yet).
+2. Clicking it opens the same scorecard form described above.
 
 ### Viewing a Scorecard (Interviewer)
 

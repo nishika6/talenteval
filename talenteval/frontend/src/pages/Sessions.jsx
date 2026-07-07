@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
@@ -12,6 +13,7 @@ const CRITERIA = [
 
 export default function Sessions() {
   const { user } = useAuth();
+  const location = useLocation();
   const isInterviewer = user.role === 'INTERVIEWER';
 
   const [sessions, setSessions] = useState([]);
@@ -50,7 +52,12 @@ export default function Sessions() {
     }
   };
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => {
+    fetchSessions();
+    if (location.state?.openSessionId) {
+      viewSession(location.state.openSessionId);
+    }
+  }, []);
 
   const startNewSession = async () => {
     try {

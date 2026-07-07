@@ -1,8 +1,8 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: 7 features complete
-- Last completed: Feature 7 — Email Notifications + async candidate session completion
+- Feature: 8 features complete
+- Last completed: Feature 8 — Upcoming Sessions on Dashboard
 
 ## Features
 
@@ -64,6 +64,15 @@
 - [x] Async session flow: candidates can now call PUT /sessions/{id}/complete
 - [x] Candidate "Complete Session" button shown on last question of their session view
 - [x] After candidate completes: returns to session list; after interviewer completes: scorecard form
+
+### 8. Upcoming Sessions on Dashboard
+- [x] Dashboard fetches all sessions via existing GET /sessions endpoint (no backend changes needed)
+- [x] Candidate view: "Upcoming Sessions" section shows sessions that are scheduled and not yet completed, with interviewer name, scheduled date/time, and a "Go to Session" button
+- [x] Interviewer view: same section shows upcoming sessions plus the 5 most recently completed, with candidate name, scheduled date/time, status badge, and a "View Session" button
+- [x] Buttons navigate to /sessions passing the target session id via route state; Sessions.jsx auto-opens that session on mount
+
+## Docs
+- [x] docs folder created with all documents
 
 ## Docs
 - [x] docs folder created with all documents
