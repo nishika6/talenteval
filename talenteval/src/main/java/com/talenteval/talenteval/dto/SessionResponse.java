@@ -16,6 +16,7 @@ public class SessionResponse {
     private Long candidateId;
     private String candidateName;
     private LocalDateTime date;
+    private LocalDateTime scheduledAt;
     private String status;
     private List<SessionQuestionResponse> questions;
 }

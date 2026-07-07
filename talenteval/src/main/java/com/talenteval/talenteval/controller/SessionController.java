@@ -46,7 +46,6 @@ public class SessionController {
     }
 
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasRole('INTERVIEWER')")
     public ResponseEntity<SessionResponse> completeSession(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(sessionService.completeSession(id, auth.getName()));
     }

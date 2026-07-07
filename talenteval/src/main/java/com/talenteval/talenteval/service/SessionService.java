@@ -19,6 +19,7 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
+    private final EmailService emailService;
 
     @Transactional
     public SessionResponse createSession(String interviewerEmail, SessionRequest request) {
@@ -36,10 +37,17 @@ public class SessionService {
                 .interviewer(interviewer)
                 .candidate(candidate)
                 .date(LocalDateTime.now())
+                .scheduledAt(request.getScheduledAt())
                 .status(SessionStatus.IN_PROGRESS)
                 .build();
 
         sessionRepository.save(session);
+        emailService.notifyCandidate(
+                candidate.getEmail(),
+                candidate.getName(),
+                interviewer.getName(),
+                request.getScheduledAt()
+        );
         return toResponse(session);
     }
 
@@ -72,8 +80,22 @@ public class SessionService {
     }
 
     @Transactional
-    public SessionResponse completeSession(Long sessionId, String interviewerEmail) {
-        InterviewSession session = getSessionForInterviewer(sessionId, interviewerEmail);
+    public SessionResponse completeSession(Long sessionId, String callerEmail) {
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        InterviewSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+
+        if (caller.getRole() == Role.INTERVIEWER) {
+            if (!session.getInterviewer().getEmail().equals(callerEmail)) {
+                throw new IllegalArgumentException("You are not the interviewer of this session");
+            }
+        } else {
+            if (!session.getCandidate().getEmail().equals(callerEmail)) {
+                throw new IllegalArgumentException("You are not the candidate of this session");
+            }
+        }
 
         if (session.getStatus() == SessionStatus.COMPLETED) {
             throw new IllegalArgumentException("Session is already completed");
@@ -81,6 +103,15 @@ public class SessionService {
 
         session.setStatus(SessionStatus.COMPLETED);
         sessionRepository.save(session);
+
+        if (caller.getRole() == Role.CANDIDATE) {
+            emailService.notifyInterviewer(
+                    session.getInterviewer().getEmail(),
+                    session.getInterviewer().getName(),
+                    caller.getName()
+            );
+        }
+
         return toResponse(session);
     }
 
@@ -140,6 +171,7 @@ public class SessionService {
                 session.getCandidate().getId(),
                 session.getCandidate().getName(),
                 session.getDate(),
+                session.getScheduledAt(),
                 session.getStatus().name(),
                 questions
         );

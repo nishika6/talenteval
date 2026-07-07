@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../api/axios';
@@ -12,6 +13,7 @@ const CRITERIA = [
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isInterviewer = user.role === 'INTERVIEWER';
 
   const [candidates, setCandidates] = useState([]);
@@ -19,8 +21,11 @@ export default function Dashboard() {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
+    api.get('/sessions').then(res => setSessions(res.data)).catch(() => {});
+
     if (isInterviewer) {
       api.get('/users/candidates')
         .then(res => setCandidates(res.data))
@@ -30,6 +35,26 @@ export default function Dashboard() {
       fetchProgress('/progress/me');
     }
   }, []);
+
+  const upcoming = sessions
+    .filter(s => s.scheduledAt && s.status !== 'COMPLETED')
+    .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+
+  const recentlyCompleted = isInterviewer
+    ? sessions
+        .filter(s => s.status === 'COMPLETED')
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5)
+    : [];
+
+  const goToSession = (id) => navigate('/sessions', { state: { openSessionId: id } });
+
+  const formatDateTime = (d) => new Date(d).toLocaleString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const statusClass = (s) => s === 'COMPLETED' ? 'badge badge-easy' : 'badge badge-medium';
 
   const fetchProgress = async (url) => {
     setLoading(true);
@@ -60,6 +85,64 @@ export default function Dashboard() {
       <Navbar />
       <main className="dashboard-main">
         <h2>Welcome, {user.name}!</h2>
+
+        <h3 style={{ margin: '24px 0 16px' }}>Upcoming Sessions</h3>
+        {upcoming.length === 0 ? (
+          <p className="empty-text">No upcoming sessions.</p>
+        ) : (
+          <div className="question-list" style={{ marginBottom: '32px' }}>
+            {upcoming.map(s => (
+              <div key={s.id} className="question-card">
+                <div className="question-content">
+                  <p className="question-title">
+                    {isInterviewer ? s.candidateName : s.interviewerName}
+                  </p>
+                  <div className="question-meta">
+                    <span className="badge badge-topic">{formatDateTime(s.scheduledAt)}</span>
+                    {isInterviewer && (
+                      <span className={statusClass(s.status)}>{s.status.replace('_', ' ')}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="question-actions">
+                  <button className="btn btn-sm btn-primary" onClick={() => goToSession(s.id)}>
+                    {isInterviewer ? 'View Session' : 'Go to Session'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isInterviewer && (
+          <>
+            <h3 style={{ margin: '24px 0 16px' }}>Recently Completed</h3>
+            {recentlyCompleted.length === 0 ? (
+              <p className="empty-text">No recently completed sessions.</p>
+            ) : (
+              <div className="question-list" style={{ marginBottom: '32px' }}>
+                {recentlyCompleted.map(s => (
+                  <div key={s.id} className="question-card">
+                    <div className="question-content">
+                      <p className="question-title">{s.candidateName}</p>
+                      <div className="question-meta">
+                        <span className="badge badge-topic">
+                          {s.scheduledAt ? formatDateTime(s.scheduledAt) : formatDateTime(s.date)}
+                        </span>
+                        <span className={statusClass(s.status)}>{s.status.replace('_', ' ')}</span>
+                      </div>
+                    </div>
+                    <div className="question-actions">
+                      <button className="btn btn-sm btn-primary" onClick={() => goToSession(s.id)}>
+                        View Session
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         {isInterviewer && (
           <div className="filters" style={{ marginTop: '20px', marginBottom: '24px' }}>
