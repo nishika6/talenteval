@@ -205,7 +205,7 @@ export default function Sessions() {
                      onClick={() => selectCandidate(c.id)}>
                   <div className="question-content">
                     <p className="question-title">{c.name}</p>
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>{c.email}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--text-light)' }}>{c.email}</p>
                   </div>
                 </div>
               ))}
@@ -392,7 +392,7 @@ export default function Sessions() {
                 </div>
               ) : canFillScorecard ? (
                 <div className="interview-card" style={{ textAlign: 'center' }}>
-                  <p style={{ marginBottom: '16px', color: '#6b7280' }}>
+                  <p style={{ marginBottom: '16px', color: 'var(--text-light)' }}>
                     No scorecard submitted yet for this session.
                   </p>
                   <button className="btn btn-primary" onClick={() => {
