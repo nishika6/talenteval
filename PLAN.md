@@ -20,7 +20,7 @@
 - [x] JWT stored in localStorage, Axios interceptor added
 - [x] Route guard (redirect if not logged in)
 
-### 2. Question Bank
+### 2. Question Bank (built on `feature/question-bank`, tested end-to-end — not yet merged to main)
 - [x] Question entity (title, role, topic, difficulty)
 - [x] QuestionRepository
 - [x] QuestionService + QuestionController (CRUD for interviewers, read-only for candidates)
@@ -28,21 +28,21 @@
 - [x] React question bank page for interviewers (add / edit / delete)
 - [x] React question browse page for candidates (filter by role + topic)
 
-### 3. Mock Interview Session
+### 3. Mock Interview Session (built on `feature/mock-interview`, tested end-to-end — not yet merged to main)
 - [x] Session entity (interviewer, candidate, date, questions used, status)
 - [x] SessionRepository + SessionService + SessionController
 - [x] API: start session, add questions, mark complete
 - [x] React interviewer flow: select candidate -> pick questions -> guided question-by-question view
 - [x] React candidate view: see active session questions
 
-### 4. Scorecard
+### 4. Scorecard (built on `feature/scorecard`, tested end-to-end — not yet merged to main)
 - [x] Scorecard entity (session, ratings for Communication / Structure / Content / Confidence, comments)
 - [x] ScorecardRepository + ScorecardService + ScorecardController
 - [x] API: submit scorecard, fetch scorecard by session
 - [x] React scorecard form for interviewers (4 criteria + comments)
 - [x] React scorecard view for candidates (read-only)
 
-### 5. Progress Dashboard
+### 5. Progress Dashboard (built on `feature/dashboard`, tested end-to-end — not yet merged to main)
 - [x] Progress API (all sessions + scores per candidate)
 - [x] React candidate dashboard: past sessions, scores per criteria, improvement over time
 - [x] React interviewer view: candidate history across sessions
@@ -70,6 +70,14 @@
 - [x] Candidate view: "Upcoming Sessions" section shows sessions that are scheduled and not yet completed, with interviewer name, scheduled date/time, and a "Go to Session" button
 - [x] Interviewer view: same section shows upcoming sessions plus the 5 most recently completed, with candidate name, scheduled date/time, status badge, and a "View Session" button
 - [x] Buttons navigate to /sessions passing the target session id via route state; Sessions.jsx auto-opens that session on mount
+
+## Docs
+- [x] docs folder created with all documents
+- [x] Root README.md (entry point for new developers)
+- [x] docs/conventions.md (coding conventions used throughout the codebase)
+- [x] setup.md updated to reflect DB_USERNAME/DB_PASSWORD env vars (was hardcoded password)
+- [x] Fixed incorrect 404 status codes in question-api.md, scorecard-api.md, progress-api.md (actual behavior is 400 — GlobalExceptionHandler always returns 400 for IllegalArgumentException)
+- [x] API + feature docs kept in sync with actual implementation for all 5 features
 
 ## Docs
 - [x] docs folder created with all documents

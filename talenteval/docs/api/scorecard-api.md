@@ -105,7 +105,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Error response (404 Not Found):**
+**Error response (400 Bad Request):**
 ```json
 {
   "error": "Scorecard not found for this session"
