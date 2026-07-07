@@ -43,13 +43,11 @@ The backend configuration file is located at:
 talenteval/src/main/resources/application.properties
 ```
 
-Key settings to verify or update:
-
 ```properties
-# MySQL connection — update password to match your MySQL root password
+# MySQL connection — credentials come from environment variables, not hardcoded
 spring.datasource.url=jdbc:mysql://localhost:3306/talenteval?createDatabaseIfNotExist=true
-spring.datasource.username=root
-spring.datasource.password=YOUR_MYSQL_PASSWORD
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
 
 # JPA — auto-creates/updates tables
 spring.jpa.hibernate.ddl-auto=update
@@ -59,7 +57,36 @@ jwt.secret=TalentEvalSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm
 jwt.expiration=86400000
 ```
 
-The only value you must change is `spring.datasource.password` — set it to your MySQL root password.
+Database credentials are read from the `DB_USERNAME` and `DB_PASSWORD` environment variables — they are intentionally kept out of `application.properties` so they never end up in source control.
+
+### Setting the environment variables (Windows / PowerShell)
+
+Set them once, persistently, for your user account:
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("DB_USERNAME", "root", "User")
+[System.Environment]::SetEnvironmentVariable("DB_PASSWORD", "your_mysql_password", "User")
+```
+
+**Restart your terminal (or VS Code) after running this** — persistent environment variables only take effect in new shell sessions.
+
+If you don't want to restart, you can set them for just the current terminal session instead:
+
+```powershell
+$env:DB_USERNAME = "root"
+$env:DB_PASSWORD = "your_mysql_password"
+```
+
+### Setting the environment variables (macOS / Linux)
+
+Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+export DB_USERNAME=root
+export DB_PASSWORD=your_mysql_password
+```
+
+Then reload it: `source ~/.zshrc` (or open a new terminal).
 
 ## Running the Backend
 
@@ -167,36 +194,38 @@ curl http://localhost:8080/api/questions \
 ## Project Structure
 
 ```
-talenteval/
-├── docs/                    # Project documentation
-├── frontend/                # React app (Vite)
-│   ├── src/
-│   │   ├── api/             # Axios HTTP client
-│   │   ├── components/      # Shared components
-│   │   ├── context/         # React context (auth state)
-│   │   └── pages/           # Page components
-│   └── package.json
-├── src/main/java/com/talenteval/talenteval/
-│   ├── controller/          # REST API controllers
-│   ├── dto/                 # Request/response objects
-│   ├── entity/              # JPA entities
-│   ├── exception/           # Global error handling
-│   ├── repository/          # Database access (JPA)
-│   ├── security/            # JWT, filters, Spring Security config
-│   └── service/             # Business logic
-├── src/main/resources/
-│   └── application.properties
-├── pom.xml                  # Maven dependencies
-└── PLAN.md                  # Project progress tracker
+talenteval/                  # git repo root
+├── README.md                 # entry point — start here
+├── PLAN.md                   # project progress tracker
+└── talenteval/                # Spring Boot project root
+    ├── docs/                  # project documentation (this folder)
+    ├── frontend/              # React app (Vite)
+    │   ├── src/
+    │   │   ├── api/           # Axios HTTP client
+    │   │   ├── components/    # Shared components
+    │   │   ├── context/       # React context (auth state)
+    │   │   └── pages/         # Page components
+    │   └── package.json
+    ├── src/main/java/com/talenteval/talenteval/
+    │   ├── controller/        # REST API controllers
+    │   ├── dto/                # Request/response objects
+    │   ├── entity/              # JPA entities
+    │   ├── exception/            # Global error handling
+    │   ├── repository/            # Database access (JPA)
+    │   ├── security/                # JWT, filters, Spring Security config
+    │   └── service/                  # Business logic
+    ├── src/main/resources/
+    │   └── application.properties
+    └── pom.xml                # Maven dependencies
 ```
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| `Access denied for user 'root'` | Update `spring.datasource.password` in `application.properties` to match your MySQL password |
+| `Access denied for user '${DB_USERNAME}'` | The `DB_USERNAME` / `DB_PASSWORD` environment variables aren't set in this terminal session — see [Setting the environment variables](#setting-the-environment-variables-windows--powershell) above |
 | `Out of memory` error on startup | Add `-Xmx384m` flag as shown above, or close other applications to free RAM |
-| `Port 8080 already in use` | Stop the other process using port 8080, or add `server.port=8081` to `application.properties` |
-| `Port 5173 already in use` | Stop the other Vite process, or run `npx vite --port 5174` |
-| `CORS error` in browser console | Make sure the backend is running and `SecurityConfig.java` allows `http://localhost:5173` |
+| `Port 8080 already in use` | Run `taskkill /F /IM java.exe` (Windows) to stop any leftover backend process, or add `server.port=8081` to `application.properties` |
+| `Port 5173 already in use` | Vite will auto-pick the next free port (e.g. 5174) — if so, also add that origin to `SecurityConfig.java`'s CORS allowed origins list |
+| `CORS error` in browser console | Make sure the backend is running and `SecurityConfig.java` allows the frontend's actual origin/port |
 | Frontend shows blank page | Open browser dev tools (F12) → Console tab to check for JavaScript errors |
