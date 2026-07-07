@@ -57,6 +57,9 @@
 - [x] Fixed incorrect 404 status codes in question-api.md, scorecard-api.md, progress-api.md (actual behavior is 400 — GlobalExceptionHandler always returns 400 for IllegalArgumentException)
 - [x] API + feature docs kept in sync with actual implementation for all 5 features
 
+## Docs
+- [x] docs folder created with all documents
+
 ## Decisions & Notes
 - Project generated via start.spring.io with: Spring Web, Spring Security, Spring Data JPA, MySQL Driver, Lombok, Validation
 - Java 17, Spring Boot 3.5.15, Maven

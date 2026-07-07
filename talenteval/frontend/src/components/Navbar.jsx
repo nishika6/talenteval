@@ -14,6 +14,7 @@ export default function Navbar() {
         <nav className="nav-links">
           <Link to="/dashboard" className={isActive('/dashboard')}>Dashboard</Link>
           <Link to="/questions" className={isActive('/questions')}>Questions</Link>
+          <Link to="/sessions" className={isActive('/sessions')}>Sessions</Link>
         </nav>
       </div>
       <div className="header-right">
