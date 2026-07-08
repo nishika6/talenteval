@@ -29,12 +29,9 @@ TalentEval is a full-stack mock interview and talent evaluation platform. Two ro
 
 **Backend** (from `talenteval/` directory):
 ```powershell
-$env:DB_USERNAME = "root"
-$env:DB_PASSWORD = "yourpassword"
-$env:MAVEN_OPTS = "-Xmx256m"
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Xmx384m"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Xmx384m" "-Dspring-boot.run.profiles=local"
 ```
-The `-Xmx384m` flag is required — the machine runs out of memory without it.
+Credentials (DB, mail, Cloudinary) come from `application-local.properties` (git-ignored) via the `local` profile — not from PowerShell env vars set by hand. The `-Xmx384m` flag caps JVM heap to keep memory usage low; if memory ever runs out on startup, this is the flag to add or increase.
 
 **Frontend** (from `talenteval/frontend/` directory):
 ```powershell
@@ -44,7 +41,7 @@ Vite may start on port 5173 or 5174 (if 5173 is taken). Both are allowed in `Sec
 
 **Common errors:**
 - "Port 8080 already in use" → `taskkill /F /IM java.exe`
-- DB connection fails → env vars not set in current PowerShell session, set them again
+- DB connection fails → check `application-local.properties` exists and has correct values, and that `-Dspring-boot.run.profiles=local` was passed
 - `npm error Missing script: dev` → wrong directory, must be inside `talenteval/frontend/`
 
 ---
