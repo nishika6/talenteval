@@ -3,6 +3,7 @@ package com.talenteval.talenteval.service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -15,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @Async
     public void notifyCandidate(String candidateEmail, String candidateName,
@@ -30,7 +34,7 @@ public class EmailService {
             String formatted = scheduledAt.format(DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a"));
             body.append("Scheduled for: ").append(formatted).append("\n");
         }
-        body.append("\nPlease log in to TalentEval to view your session.\n\n");
+        body.append("\nOpen TalentEval: ").append(frontendUrl).append("/login\n\n");
         body.append("Best,\nTalentEval Team");
 
         msg.setText(body.toString());
@@ -46,6 +50,7 @@ public class EmailService {
         String body = "Hi " + interviewerName + ",\n\n"
                 + candidateName + " has completed their mock interview session.\n\n"
                 + "Please log in to TalentEval to review and fill in the scorecard.\n\n"
+                + "Open TalentEval: " + frontendUrl + "/login\n\n"
                 + "Best,\nTalentEval Team";
 
         msg.setText(body);
