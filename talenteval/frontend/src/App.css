@@ -38,6 +38,15 @@
   margin-bottom: 16px;
 }
 
+.auth-success {
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
 .form-group {
   margin-bottom: 16px;
 }

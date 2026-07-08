@@ -12,6 +12,7 @@
   --error: #f87171;
   --error-bg: rgba(248, 113, 113, 0.12);
   --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.12);
   --radius: 8px;
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

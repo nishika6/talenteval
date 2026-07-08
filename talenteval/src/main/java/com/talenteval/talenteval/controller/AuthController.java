@@ -1,13 +1,17 @@
 package com.talenteval.talenteval.controller;
 
 import com.talenteval.talenteval.dto.AuthResponse;
+import com.talenteval.talenteval.dto.ForgotPasswordRequest;
 import com.talenteval.talenteval.dto.LoginRequest;
 import com.talenteval.talenteval.dto.RegisterRequest;
+import com.talenteval.talenteval.dto.ResetPasswordRequest;
 import com.talenteval.talenteval.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,5 +28,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "If that email is registered, a reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "Password reset successful."));
     }
 }

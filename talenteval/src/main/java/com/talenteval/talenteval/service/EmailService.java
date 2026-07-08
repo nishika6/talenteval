@@ -56,4 +56,22 @@ public class EmailService {
         msg.setText(body);
         mailSender.send(msg);
     }
+
+    @Async
+    public void sendPasswordResetEmail(String email, String name, String token) {
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(email);
+        msg.setSubject("Reset your TalentEval password");
+
+        String resetLink = frontendUrl + "/reset-password?token=" + token;
+        String body = "Hi " + name + ",\n\n"
+                + "We received a request to reset your TalentEval password.\n"
+                + "Click the link below to set a new password (expires in 30 minutes):\n\n"
+                + resetLink + "\n\n"
+                + "If you didn't request this, you can safely ignore this email.\n\n"
+                + "Best,\nTalentEval Team";
+
+        msg.setText(body);
+        mailSender.send(msg);
+    }
 }

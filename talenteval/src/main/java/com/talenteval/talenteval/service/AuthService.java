@@ -3,8 +3,10 @@ package com.talenteval.talenteval.service;
 import com.talenteval.talenteval.dto.AuthResponse;
 import com.talenteval.talenteval.dto.LoginRequest;
 import com.talenteval.talenteval.dto.RegisterRequest;
+import com.talenteval.talenteval.entity.PasswordResetToken;
 import com.talenteval.talenteval.entity.Role;
 import com.talenteval.talenteval.entity.User;
+import com.talenteval.talenteval.repository.PasswordResetTokenRepository;
 import com.talenteval.talenteval.repository.UserRepository;
 import com.talenteval.talenteval.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +15,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     public AuthResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
@@ -54,6 +61,40 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse(token, user.getName(), user.getEmail(), user.getRole().name());
+    }
+
+    public void forgotPassword(String rawEmail) {
+        String email = normalizeEmail(rawEmail);
+
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+
+            PasswordResetToken resetToken = PasswordResetToken.builder()
+                    .token(token)
+                    .user(user)
+                    .expiryDate(LocalDateTime.now().plusMinutes(30))
+                    .used(false)
+                    .build();
+            passwordResetTokenRepository.save(resetToken);
+
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
+        });
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset link"));
+
+        if (resetToken.isUsed() || resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Invalid or expired reset link");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
     }
 
     private String normalizeEmail(String email) {
