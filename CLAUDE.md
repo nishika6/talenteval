@@ -8,7 +8,7 @@ TalentEval is a full-stack mock interview and talent evaluation platform. Two ro
 
 ## Tech Stack
 
-- **Backend:** Spring Boot 3.5.15, Spring Security, JWT (JJWT 0.12.6), Spring Data JPA, Hibernate, MySQL, Lombok, Bean Validation
+- **Backend:** Spring Boot 3.5.15, Spring Security, JWT (JJWT 0.12.6), Spring Data JPA, Hibernate, MySQL, Lombok, Bean Validation, Spring Mail, Cloudinary SDK
 - **Frontend:** React (Vite), Axios, React Router
 - **Java:** 17 | **Build:** Maven | **Base package:** `com.talenteval.talenteval`
 - **Working directory:** `d:\nishika original\talenteval\talenteval\`
@@ -51,14 +51,7 @@ Vite may start on port 5173 or 5174 (if 5173 is taken). Both are allowed in `Sec
 
 ## Branch state
 
-| Branch | Contains |
-|---|---|
-| `main` | Feature 1 (auth) + docs folder (README, docs/, conventions.md, PLAN.md, CLAUDE.md) |
-| `feature/dashboard` | Superseded — Features 1–5 + dark mode. Left as-is, not used going forward. |
-| `feature/email-notifications` | Stale/superseded — branched off `main` early, missing everything from `feature/dashboard` onward. Do not merge, it would delete newer work. |
-| `feature/scheduler` | **Current tip of development.** All 8 features + dark mode + scheduler + email notifications + upcoming-sessions dashboard. |
-
-All active development is on `feature/scheduler`. `CLAUDE.md` and other docs live only on `main` (feature branches don't carry them) — when merging a feature branch into `main`, expect doc-only merge conflicts on files like `PLAN.md`; they are normal and resolvable by keeping `main`'s side and re-adding the feature-branch content.
+`main` is the source of truth and is fully up to date. All features (1–10 below) were merged into `main` via GitHub PRs (#1–#7), and the 3 post-review fixes were committed directly onto `main` afterward. The feature branches used to build them have since been deleted (merged and no longer needed) — `main` is the only branch that matters going forward.
 
 ---
 
@@ -120,16 +113,21 @@ All active development is on `feature/scheduler`. `CLAUDE.md` and other docs liv
 - Interviewer view: separate "Upcoming Sessions" and "Recently Completed" (last 5) sections, each with candidate name, date/time, status badge, and a "View Session" button — kept as two distinct sections rather than one merged list so a "COMPLETED" badge never shows up under an "Upcoming" heading
 - Buttons navigate to `/sessions` passing the target session id via React Router `state` (`{ openSessionId }`); `Sessions.jsx` reads `location.state.openSessionId` on mount and auto-opens that session
 
+### 10. Voice Recording ✅
+- Candidate records verbal answers per question via browser `MediaRecorder` API (`audio/webm`) during their session; recording is **required** before completing — `SessionService.completeSession()` calls `RecordingService.isFullyRecorded()` and blocks candidates who haven't recorded every question
+- `SessionRecording` entity tracks (session, question, filePath, uploadedAt) — `filePath` holds the Cloudinary `secure_url`, not a local disk path
+- `RecordingStorageService` interface (`store()`/`load()`) abstracts the storage backend — implemented by `CloudinaryRecordingStorageService`. Originally built against local disk (`LocalRecordingStorageService`), confirmed working, then migrated to Cloudinary after a senior flagged that local files risk data loss and don't scale for concurrent users; the local implementation was removed once Cloudinary was confirmed working
+- Audio uploaded to Cloudinary with `resource_type: "video"` (Cloudinary has no dedicated audio type)
+- Frontend never talks to Cloudinary directly — `GET /sessions/{id}/recordings/{questionId}/audio` is an authenticated proxy endpoint that fetches bytes from Cloudinary server-side and streams them back, preserving the existing "only session participants can access" authorization model
+- Interviewer sees `<audio controls>` playback per question on the session review page before filling the scorecard
+
 ---
 
-## Features in progress
+## Fixes from senior review
 
-### Voice Recording (async model) — TODO
-- Candidate records verbal answers using browser `MediaRecorder` API during their session
-- Start/Stop Recording button per question on candidate's session page
-- Audio blobs uploaded to backend on session completion (multipart)
-- Stored in local server storage; new `SessionRecording` entity tracks (sessionId, questionId, filePath)
-- Interviewer sees audio playback per question in session review page before filling scorecard
+1. **Website link in emails** — `app.frontend-url` config (`${FRONTEND_URL:http://localhost:5173}`) injected into `EmailService`; both `notifyCandidate()` and `notifyInterviewer()` now append a link to `/login`.
+2. **Email alias bypass** — Gmail-style `+alias` addresses (e.g. `nishika+abc@gmail.com`) could register as a separate account from `nishika@gmail.com` despite delivering to the same inbox. `AuthService.normalizeEmail()` lowercases the address and strips everything from `+` onward in the local part; applied before every `existsByEmail`/`findByEmail` lookup in `register()` and `login()`. Scoped to `+`-stripping only (not Gmail dot-insensitivity, which would risk false-colliding legitimately distinct addresses on other providers). Existing accounts created before this fix are not migrated/merged.
+3. **Forgot Password** — `PasswordResetToken` entity (token, user, expiryDate, used) + `PasswordResetTokenRepository`. `POST /api/auth/forgot-password` issues a 30-minute single-use token and emails a reset link, but always returns the same generic response regardless of whether the email exists (prevents email enumeration). `POST /api/auth/reset-password` validates the token isn't expired/used, updates the password, and marks it used. Both endpoints fall under the existing `/api/auth/**` permitAll rule — no `SecurityConfig` changes needed. New frontend pages `ForgotPassword.jsx`/`ResetPassword.jsx`, routes added to `App.jsx`, link added to `Login.jsx`. No cleanup job for expired/used tokens — they just accumulate in the table; acceptable for now.
 
 ---
 
@@ -167,6 +165,12 @@ No new table. Fetches all `Scorecard` rows for a candidate ordered by session da
 ### Dashboard "Upcoming Sessions"
 `Dashboard.jsx` fetches `GET /sessions` (same endpoint `Sessions.jsx` uses) and derives `upcoming` / `recentlyCompleted` client-side with `.filter()`/`.sort()` — no new DTO or endpoint. Kept as a derived-on-render computation rather than `useMemo` since the session list is small and this isn't a perf-sensitive path.
 
+### RecordingStorageService (Cloudinary)
+`store()`/`load()` interface designed specifically so swapping storage backends is a single-class change — no entity/controller/frontend changes needed when migrating from local disk to Cloudinary. `CloudinaryRecordingStorageService` uploads with `resource_type: "video"` and `load()` re-fetches bytes from the Cloudinary `secure_url` via `java.net.http.HttpClient` for the authenticated proxy endpoint.
+
+### Email normalization
+`AuthService.normalizeEmail()` lowercases and strips `+alias` suffixes before every register/login lookup. Deliberately does not strip dots — that's a Gmail-only quirk, and applying it to all providers would risk false-colliding legitimately distinct addresses elsewhere.
+
 ---
 
 ## DB schema (auto-managed by Hibernate `ddl-auto=update`)
@@ -178,13 +182,15 @@ No new table. Fetches all `Scorecard` rows for a candidate ordered by session da
 | `sessions` | id, interviewer_id, candidate_id, date, scheduled_at, status |
 | `session_questions` | id, session_id, question_id, question_order |
 | `scorecards` | id, session_id (unique), candidate_id, communication, structure, content, confidence, comments |
+| `session_recordings` | id, session_id + question_id (unique together), file_path (Cloudinary URL), uploaded_at |
+| `password_reset_tokens` | id, token (unique), user_id, expiry_date, used |
 
 ---
 
 ## application.properties settings
 
 ```
-spring.datasource.url=jdbc:mysql://localhost:3306/talenteval
+spring.datasource.url=jdbc:mysql://localhost:3306/talenteval?createDatabaseIfNotExist=true
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 spring.jpa.hibernate.ddl-auto=update
@@ -198,6 +204,20 @@ spring.mail.username=${MAIL_USERNAME}
 spring.mail.password=${MAIL_PASSWORD}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Voice recordings
+spring.servlet.multipart.max-file-size=25MB
+spring.servlet.multipart.max-request-size=25MB
+
+# Cloudinary
+cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME}
+cloudinary.api-key=${CLOUDINARY_API_KEY}
+cloudinary.api-secret=${CLOUDINARY_API_SECRET}
+
+# Frontend
+app.frontend-url=${FRONTEND_URL:http://localhost:5173}
 ```
 
-Local secrets (DB + mail credentials) are kept in a git-ignored `application-local.properties`, run with `-Dspring-boot.run.profiles=local` or equivalent, rather than typed into every PowerShell session by hand.
+Local secrets (DB + mail + Cloudinary credentials) are kept in a git-ignored `application-local.properties`, run with `-Dspring-boot.run.profiles=local` or equivalent, rather than typed into every PowerShell session by hand.
+
+**Known gap:** `spring.datasource.url` and `jwt.secret` are still hardcoded above rather than env vars (unlike `DB_USERNAME`/`DB_PASSWORD`/mail/Cloudinary). This was flagged and a fix was designed (`${DB_URL:...}` and `${JWT_SECRET}`), but deliberately deferred — rotating `jwt.secret` would invalidate every currently-issued JWT and log all users out, so it's being done as its own separate step, not bundled into another change.

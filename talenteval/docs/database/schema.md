@@ -43,7 +43,8 @@ Stores mock interview sessions between an interviewer and a candidate.
 | id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique session identifier |
 | interviewer_id | BIGINT | NOT NULL, FOREIGN KEY → users(id) | The interviewer conducting the session |
 | candidate_id | BIGINT | NOT NULL, FOREIGN KEY → users(id) | The candidate being interviewed |
-| date | DATETIME | NOT NULL | When the session took place |
+| date | DATETIME | NOT NULL | When the session was created |
+| scheduled_at | DATETIME | NULLABLE | When the session is scheduled to take place, if the interviewer set one |
 | status | ENUM('IN_PROGRESS', 'COMPLETED') | NOT NULL | Current state of the session |
 
 ---
@@ -78,6 +79,38 @@ Stores the interviewer's evaluation after a session.
 
 ---
 
+## Table: `session_recordings`
+
+Stores a candidate's recorded audio answer for each question in a session. Audio bytes themselves live in Cloudinary — this table only stores the URL.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique recording identifier |
+| session_id | BIGINT | NOT NULL, FOREIGN KEY → sessions(id) | The session this recording belongs to |
+| question_id | BIGINT | NOT NULL, FOREIGN KEY → questions(id) | The question being answered |
+| file_path | VARCHAR(255) | NOT NULL | The Cloudinary `secure_url` for the uploaded audio |
+| uploaded_at | DATETIME | NOT NULL | When the recording was (last) uploaded |
+
+`(session_id, question_id)` has a unique constraint — one recording per question per session; re-recording overwrites the existing row rather than creating a new one.
+
+---
+
+## Table: `password_reset_tokens`
+
+Stores single-use tokens for the Forgot Password flow.
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | Unique row identifier |
+| token | VARCHAR(255) | NOT NULL, UNIQUE | Random UUID sent in the reset email link |
+| user_id | BIGINT | NOT NULL, FOREIGN KEY → users(id) | The user requesting the reset |
+| expiry_date | DATETIME | NOT NULL | Token becomes invalid after this time (30 minutes after creation) |
+| used | BOOLEAN | NOT NULL | Set `true` once the token has been used to reset a password, so it can't be replayed |
+
+No cleanup job removes expired/used rows — they just accumulate in this table.
+
+---
+
 ## Foreign Key Relationships
 
 ```
@@ -87,4 +120,7 @@ session_questions.session_id   → sessions.id
 session_questions.question_id  → questions.id
 scorecards.session_id    → sessions.id
 scorecards.candidate_id  → users.id
+session_recordings.session_id   → sessions.id
+session_recordings.question_id  → questions.id
+password_reset_tokens.user_id   → users.id
 ```

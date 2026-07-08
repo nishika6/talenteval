@@ -49,13 +49,15 @@ Start a new mock interview session.
 
 ```json
 {
-  "candidateId": 3
+  "candidateId": 3,
+  "scheduledAt": "2026-07-15T14:00:00"
 }
 ```
 
 | Field | Type | Validation | Description |
 |---|---|---|---|
 | candidateId | Long | Required | The ID of the candidate to interview |
+| scheduledAt | LocalDateTime | Optional | When the session is scheduled for. If omitted, the session has no scheduled time and only the creation timestamp (`date`) is shown |
 
 **Success response (200 OK):**
 
@@ -67,10 +69,13 @@ Start a new mock interview session.
   "candidateId": 3,
   "candidateName": "Priya Sharma",
   "date": "2026-06-29T10:30:00",
+  "scheduledAt": "2026-07-15T14:00:00",
   "status": "IN_PROGRESS",
   "questions": []
 }
 ```
+
+Creating a session emails the candidate (see [email-notifications.md](../features/email-notifications.md)) — the email includes the scheduled time if one was set.
 
 **Error responses:**
 
@@ -116,6 +121,7 @@ Authorization: Bearer <token>
     "candidateId": 3,
     "candidateName": "Priya Sharma",
     "date": "2026-06-29T10:30:00",
+    "scheduledAt": null,
     "status": "COMPLETED",
     "questions": [
       {
@@ -149,6 +155,7 @@ Get a specific session by ID.
   "candidateId": 3,
   "candidateName": "Priya Sharma",
   "date": "2026-06-29T10:30:00",
+  "scheduledAt": "2026-07-15T14:00:00",
   "status": "IN_PROGRESS",
   "questions": [
     {
@@ -236,7 +243,11 @@ Add questions to an in-progress session.
 
 Mark a session as completed.
 
-**Role required:** INTERVIEWER only (must be the session's interviewer)
+**Role required:** INTERVIEWER or CANDIDATE — either participant can complete the session (this endpoint has no `@PreAuthorize`; `SessionService` checks the caller's role and their relationship to the session internally).
+
+- If the **interviewer** completes it, they're taken straight to the scorecard form.
+- If the **candidate** completes it, they're returned to the session list, and the interviewer is emailed (see [email-notifications.md](../features/email-notifications.md)).
+- A candidate must have recorded an answer for every question in the session before they're allowed to complete it (see [voice-recording.md](../features/voice-recording.md)) — this restriction does not apply to the interviewer.
 
 **Example request:**
 ```
@@ -254,14 +265,31 @@ Authorization: Bearer <token>
   "candidateId": 3,
   "candidateName": "Priya Sharma",
   "date": "2026-06-29T10:30:00",
+  "scheduledAt": "2026-07-15T14:00:00",
   "status": "COMPLETED",
   "questions": [...]
 }
 ```
 
-**Error response (400 Bad Request):**
+**Error responses (400 Bad Request):**
+
+*Session already completed:*
 ```json
 {
   "error": "Session is already completed"
+}
+```
+
+*Candidate hasn't recorded every question yet:*
+```json
+{
+  "error": "Please record all questions before completing the session"
+}
+```
+
+*Caller isn't a participant of this session:*
+```json
+{
+  "error": "You are not the candidate of this session"
 }
 ```

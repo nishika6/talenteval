@@ -39,7 +39,8 @@ Authorization: Bearer <token>
       "communication": 3,
       "structure": 3,
       "content": 4,
-      "confidence": 3
+      "confidence": 3,
+      "comments": "Good start, work on structuring answers with a clear beginning/middle/end."
     },
     {
       "sessionId": 3,
@@ -48,7 +49,8 @@ Authorization: Bearer <token>
       "communication": 4,
       "structure": 4,
       "content": 4,
-      "confidence": 4
+      "confidence": 4,
+      "comments": null
     },
     {
       "sessionId": 5,
@@ -57,7 +59,8 @@ Authorization: Bearer <token>
       "communication": 5,
       "structure": 4,
       "content": 5,
-      "confidence": 5
+      "confidence": 5,
+      "comments": "Excellent improvement since last session."
     }
   ]
 }
@@ -66,6 +69,7 @@ Authorization: Bearer <token>
 This response is designed for the frontend to render:
 - Overall averages across all sessions
 - Per-session scores showing improvement over time (sessions are ordered by date)
+- Each session's `comments` field holds the interviewer's written scorecard feedback, or `null` if they left it blank
 
 ---
 
@@ -102,7 +106,8 @@ Authorization: Bearer <token>
       "communication": 3,
       "structure": 3,
       "content": 4,
-      "confidence": 3
+      "confidence": 3,
+      "comments": "Good start, work on structuring answers with a clear beginning/middle/end."
     },
     {
       "sessionId": 3,
@@ -111,7 +116,8 @@ Authorization: Bearer <token>
       "communication": 4,
       "structure": 4,
       "content": 4,
-      "confidence": 4
+      "confidence": 4,
+      "comments": null
     },
     {
       "sessionId": 5,
@@ -120,7 +126,8 @@ Authorization: Bearer <token>
       "communication": 5,
       "structure": 4,
       "content": 5,
-      "confidence": 5
+      "confidence": 5,
+      "comments": "Excellent improvement since last session."
     }
   ]
 }

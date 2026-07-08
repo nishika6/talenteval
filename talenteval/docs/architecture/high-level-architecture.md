@@ -5,64 +5,69 @@
 TalentEval is a three-tier application with a React single-page application (SPA) frontend, a Spring Boot REST API backend, and a MySQL relational database.
 
 ```
-┌─────────────────────────────┐
-│     React SPA (Vite)        │
-│     http://localhost:5173   │
-│                             │
-│  Pages: Login, Register,    │
-│  Question Bank, Session,    │
-│  Scorecard, Dashboard       │
-│                             │
-│  Axios HTTP Client          │
-│  JWT stored in localStorage │
-└────────────┬────────────────┘
-             │  HTTP (JSON)
+┌─────────────────────────────────┐
+│     React SPA (Vite)            │
+│     http://localhost:5173       │
+│                                  │
+│  Pages: Login, Register,        │
+│  Forgot/Reset Password,         │
+│  Question Bank, Sessions        │
+│  (incl. scorecard), Dashboard   │
+│                                  │
+│  Axios HTTP Client               │
+│  JWT stored in localStorage      │
+└────────────┬─────────────────────┘
+             │  HTTP (JSON + multipart for recordings)
              │  Authorization: Bearer <JWT>
              ▼
-┌─────────────────────────────┐
-│   Spring Boot REST API      │
-│   http://localhost:8080     │
-│                             │
-│  ┌───────────────────────┐  │
-│  │   Security Layer      │  │
-│  │  ┌─────────────────┐  │  │
-│  │  │ CORS Filter      │  │  │
-│  │  │ JWT Auth Filter  │  │  │
-│  │  │ SecurityConfig   │  │  │
-│  │  └─────────────────┘  │  │
-│  └───────────┬───────────┘  │
-│              ▼              │
-│  ┌───────────────────────┐  │
-│  │   Controller Layer    │  │
-│  │  AuthController       │  │
-│  │  QuestionController   │  │
-│  │  SessionController    │  │
-│  │  ScorecardController  │  │
-│  │  ProgressController   │  │
-│  └───────────┬───────────┘  │
-│              ▼              │
-│  ┌───────────────────────┐  │
-│  │   Service Layer       │  │
-│  │  Business logic,      │  │
-│  │  validation, mapping  │  │
-│  └───────────┬───────────┘  │
-│              ▼              │
-│  ┌───────────────────────┐  │
-│  │   Repository Layer    │  │
-│  │  Spring Data JPA      │  │
-│  └───────────┬───────────┘  │
-└──────────────┼──────────────┘
-               │  JDBC
+┌───────────────────────────────────┐
+│   Spring Boot REST API            │
+│   http://localhost:8080           │
+│                                   │
+│  ┌───────────────────────────┐   │
+│  │   Security Layer          │   │
+│  │  ┌─────────────────────┐  │   │
+│  │  │ CORS Filter          │  │   │
+│  │  │ JWT Auth Filter      │  │   │
+│  │  │ SecurityConfig       │  │   │
+│  │  └─────────────────────┘  │   │
+│  └───────────┬───────────────┘   │
+│              ▼                   │
+│  ┌───────────────────────────┐   │
+│  │   Controller Layer        │   │
+│  │  AuthController           │   │
+│  │  QuestionController       │   │
+│  │  SessionController        │   │
+│  │  RecordingController      │   │
+│  │  ScorecardController      │   │
+│  │  ProgressController       │   │
+│  └───────────┬───────────────┘   │
+│              ▼                   │
+│  ┌───────────────────────────┐   │
+│  │   Service Layer           │   │
+│  │  Business logic,          │   │
+│  │  validation, mapping      │   │
+│  │  EmailService (@Async)    │   │
+│  │  RecordingStorageService  │───┼──▶ Cloudinary (audio storage)
+│  └───────────┬───────────────┘   │
+│              ▼                   │
+│  ┌───────────────────────────┐   │
+│  │   Repository Layer        │   │
+│  │  Spring Data JPA          │   │
+│  └───────────┬───────────────┘   │
+└──────────────┼───────────────────┘
+               │  JDBC                  ─────▶ SMTP (session/reset emails)
                ▼
-┌─────────────────────────────┐
-│       MySQL 8 Database      │
-│       localhost:3306        │
-│       Schema: talenteval    │
-│                             │
-│  Tables: users, questions,  │
-│  sessions, session_questions│
-│  scorecards                 │
-└─────────────────────────────┘
+┌───────────────────────────────────┐
+│       MySQL 8 Database            │
+│       localhost:3306              │
+│       Schema: talenteval          │
+│                                   │
+│  Tables: users, questions,        │
+│  sessions, session_questions,     │
+│  scorecards, session_recordings,  │
+│  password_reset_tokens            │
+└───────────────────────────────────┘
 ```
 
 ## Request Flow
@@ -91,15 +96,19 @@ If any step fails, **GlobalExceptionHandler** catches the exception and returns 
 
 ### Authorization
 
-- **Public routes:** `POST /api/auth/register`, `POST /api/auth/login`
+- **Public routes:** everything under `/api/auth/**` — `register`, `login`, `forgot-password`, `reset-password`.
 - **Authenticated routes:** All other `/api/**` endpoints require a valid JWT.
-- **Role-based access:** Individual endpoints use `@PreAuthorize("hasRole('INTERVIEWER')")` or `@PreAuthorize("hasRole('CANDIDATE')")` to restrict access by role.
+- **Role-based access:** Individual endpoints use `@PreAuthorize("hasRole('INTERVIEWER')")` or `@PreAuthorize("hasRole('CANDIDATE')")` to restrict access by role. `PUT /api/sessions/{id}/complete` is the one exception — it has no `@PreAuthorize` since either role can complete a session; `SessionService` checks the caller's role and relationship to the session itself.
 
 ### CORS
 
-- Configured to allow requests only from `http://localhost:5173` (the Vite dev server).
+- Configured to allow requests from `http://localhost:5173` and `http://localhost:5174` (Vite falls back to 5174 if 5173 is taken).
 - Allows GET, POST, PUT, DELETE, and OPTIONS methods.
 - Credentials (cookies, authorization headers) are permitted.
+
+### Async email
+
+`EmailService`'s methods are `@Async` (enabled via `@EnableAsync` on the main application class), so sending a session-assignment, completion-notification, or password-reset email never blocks the API response. If SMTP fails, the exception is only logged — the original request has already returned successfully by then.
 
 ## Package Structure
 
