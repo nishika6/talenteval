@@ -2,7 +2,7 @@
 
 ## What It Does
 
-Enables interviewers to conduct structured mock interview sessions with candidates, asynchronously. The interviewer starts a session, selects a candidate, optionally schedules a date/time, and picks questions from the question bank. The candidate then works through the questions independently in their own guided view — recording a spoken answer for each one — at whatever time suits them, rather than live alongside the interviewer. The interviewer reviews the recordings and fills a scorecard afterward. The session is saved with the date, participants, and all questions used.
+Enables interviewers to conduct structured mock interview sessions with candidates, asynchronously. The interviewer starts a session, selects a candidate, optionally schedules a date/time, and picks questions from the question bank. The candidate then works through the questions independently in their own guided view — recording a video answer for each one — at whatever time suits them, rather than live alongside the interviewer. The interviewer reviews the recordings and fills a scorecard afterward. The session is saved with the date, participants, and all questions used.
 
 ## How It Works End to End
 
@@ -24,8 +24,8 @@ Enables interviewers to conduct structured mock interview sessions with candidat
 
 ### Guided Question-by-Question Flow
 
-1. Once questions are selected, each participant works through them independently in their own guided, one-at-a-time view (not a shared live screen) — the interviewer can navigate forward/backward through questions when picking them or reviewing later; the candidate does the same when recording answers.
-2. This flow is driven entirely on the frontend — no additional API calls are needed since all questions are already loaded, aside from the candidate's per-question recording uploads (see [voice-recording.md](voice-recording.md)).
+1. Once questions are selected, each participant works through them independently in their own guided, one-at-a-time view (not a shared live screen) — the interviewer can navigate forward/backward through questions when picking them or reviewing later; the candidate does the same when recording video answers.
+2. This flow is driven entirely on the frontend — no additional API calls are needed since all questions are already loaded, aside from the candidate's per-question recording uploads (see [video-recording.md](video-recording.md)).
 
 ### Completing a Session
 
@@ -38,7 +38,7 @@ Either participant can complete a session, and each has a different flow:
 4. The interviewer is taken directly to the scorecard form for this session (see [scorecard.md](scorecard.md)).
 
 **Candidate completes it (async flow):**
-1. The candidate records an answer for every question in the session first (see [voice-recording.md](voice-recording.md)) — completion is blocked with a 400 error until every question has a recording.
+1. The candidate records an answer for every question in the session first (see [video-recording.md](video-recording.md)) — completion is blocked with a 400 error until every question has a recording.
 2. The candidate clicks "Complete Session" on the last question.
 3. React sends the same `PUT /api/sessions/{id}/complete` request.
 4. The backend marks the session `COMPLETED` and emails the interviewer that the candidate has finished (see [email-notifications.md](email-notifications.md)).

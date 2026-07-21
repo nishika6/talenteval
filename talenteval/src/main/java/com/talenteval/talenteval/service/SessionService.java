@@ -165,7 +165,8 @@ public class SessionService {
                         sq.getQuestion().getRole().name(),
                         sq.getQuestion().getTopic(),
                         sq.getQuestion().getDifficulty().name(),
-                        sq.getQuestionOrder()
+                        sq.getQuestionOrder(),
+                        sq.getQuestion().getTimeLimit()
                 ))
                 .toList();
 

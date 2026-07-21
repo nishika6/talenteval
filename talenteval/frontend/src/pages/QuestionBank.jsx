@@ -15,7 +15,7 @@ export default function QuestionBank() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ title: '', role: 'HR', topic: '', difficulty: 'EASY' });
+  const [form, setForm] = useState({ title: '', role: 'HR', topic: '', difficulty: 'EASY', timeLimit: 120 });
   const [formError, setFormError] = useState('');
 
   const roles = ['HR', 'UX', 'PM', 'FINANCE', 'ENGINEERING'];
@@ -43,14 +43,14 @@ export default function QuestionBank() {
 
   const openAddForm = () => {
     setEditingId(null);
-    setForm({ title: '', role: 'HR', topic: '', difficulty: 'EASY' });
+    setForm({ title: '', role: 'HR', topic: '', difficulty: 'EASY', timeLimit: 120 });
     setFormError('');
     setShowForm(true);
   };
 
   const openEditForm = (q) => {
     setEditingId(q.id);
-    setForm({ title: q.title, role: q.role, topic: q.topic, difficulty: q.difficulty });
+    setForm({ title: q.title, role: q.role, topic: q.topic, difficulty: q.difficulty, timeLimit: q.timeLimit });
     setFormError('');
     setShowForm(true);
   };
@@ -175,6 +175,18 @@ export default function QuestionBank() {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label htmlFor="timeLimit">Time Limit (seconds)</label>
+                <input
+                  id="timeLimit"
+                  type="number"
+                  min="10"
+                  max="1800"
+                  value={form.timeLimit}
+                  onChange={(e) => setForm({ ...form, timeLimit: Number(e.target.value) })}
+                  required
+                />
+              </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">{editingId ? 'Save Changes' : 'Add Question'}</button>
@@ -198,6 +210,7 @@ export default function QuestionBank() {
                   <span className="badge badge-role">{q.role}</span>
                   <span className="badge badge-topic">{q.topic}</span>
                   <span className={difficultyClass(q.difficulty)}>{q.difficulty}</span>
+                  <span className="badge badge-topic">{q.timeLimit}s</span>
                 </div>
               </div>
               {isInterviewer && (

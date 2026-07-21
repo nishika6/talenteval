@@ -4,7 +4,7 @@ Base URL: `http://localhost:8080/api/sessions/{sessionId}/recordings`
 
 All endpoints require a valid JWT in the `Authorization: Bearer <token>` header.
 
-Audio files are stored in Cloudinary, not in this backend or its database directly — these endpoints never expose a Cloudinary URL to the frontend. Uploads go through this API, and playback is served through an authenticated proxy endpoint that fetches the bytes from Cloudinary server-side (see [voice-recording.md](../features/voice-recording.md)).
+Video files are stored in Cloudinary, not in this backend or its database directly — these endpoints never expose a Cloudinary URL to the frontend. Uploads go through this API, and playback is served through an authenticated proxy endpoint that fetches the bytes from Cloudinary server-side (see [video-recording.md](../features/video-recording.md)).
 
 ---
 
@@ -19,7 +19,7 @@ Upload a recorded answer for one question in the session.
 | Field | Type | Description |
 |---|---|---|
 | questionId | Long | The question this recording answers — must be one of the questions added to the session |
-| file | File | The recorded audio, e.g. `audio/webm` from the browser's `MediaRecorder` |
+| file | File | The recorded video, e.g. `video/webm` from the browser's `MediaRecorder` (captured with both `video: true` and `audio: true`) |
 
 Uploading again for the same `questionId` overwrites the previous recording (re-recording is allowed until the session is completed).
 
@@ -28,7 +28,7 @@ Uploading again for the same `questionId` overwrites the previous recording (re-
 ```json
 {
   "questionId": 1,
-  "url": "/sessions/7/recordings/1/audio"
+  "url": "/sessions/7/recordings/1/video"
 }
 ```
 
@@ -73,8 +73,8 @@ Authorization: Bearer <token>
 
 ```json
 [
-  { "questionId": 1, "url": "/sessions/7/recordings/1/audio" },
-  { "questionId": 2, "url": "/sessions/7/recordings/2/audio" }
+  { "questionId": 1, "url": "/sessions/7/recordings/1/video" },
+  { "questionId": 2, "url": "/sessions/7/recordings/2/video" }
 ]
 ```
 
@@ -87,21 +87,21 @@ Authorization: Bearer <token>
 
 ---
 
-## GET /api/sessions/{sessionId}/recordings/{questionId}/audio
+## GET /api/sessions/{sessionId}/recordings/{questionId}/video
 
-Stream the audio for one question's recording.
+Stream the video for one question's recording.
 
 **Role required:** INTERVIEWER or CANDIDATE (must be a participant in the session)
 
-Returns the raw audio bytes with `Content-Type: audio/webm` — this is the URL used directly in an `<audio>` element's `src`. The backend fetches the bytes from Cloudinary on each request; the frontend never talks to Cloudinary directly.
+Returns the raw video bytes with `Content-Type: video/webm` — this is the URL used directly in a `<video>` element's `src`. The backend fetches the bytes from Cloudinary on each request; the frontend never talks to Cloudinary directly.
 
 **Example request:**
 ```
-GET /api/sessions/7/recordings/1/audio
+GET /api/sessions/7/recordings/1/video
 Authorization: Bearer <token>
 ```
 
-**Success response (200 OK):** binary audio data.
+**Success response (200 OK):** binary video data.
 
 **Error response (400 Bad Request):**
 ```json

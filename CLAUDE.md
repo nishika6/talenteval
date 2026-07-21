@@ -48,7 +48,7 @@ Vite may start on port 5173 or 5174 (if 5173 is taken). Both are allowed in `Sec
 
 ## Branch state
 
-`main` is the source of truth and is fully up to date. All features (1–10 below) were merged into `main` via GitHub PRs (#1–#7), and the 3 post-review fixes were committed directly onto `main` afterward. The feature branches used to build them have since been deleted (merged and no longer needed) — `main` is the only branch that matters going forward.
+`main` is the source of truth and is fully up to date. Features 1–10 were merged into `main` via GitHub PRs (#1–#7), the 3 post-review fixes were committed directly onto `main` afterward, and Feature 11 (Time Limit for Questions) was committed directly onto `main` as well. The feature branches used to build 1–10 have since been deleted (merged and no longer needed) — `main` is the only branch that matters going forward.
 
 ---
 
@@ -117,6 +117,23 @@ Vite may start on port 5173 or 5174 (if 5173 is taken). Both are allowed in `Sec
 - Audio uploaded to Cloudinary with `resource_type: "video"` (Cloudinary has no dedicated audio type)
 - Frontend never talks to Cloudinary directly — `GET /sessions/{id}/recordings/{questionId}/audio` is an authenticated proxy endpoint that fetches bytes from Cloudinary server-side and streams them back, preserving the existing "only session participants can access" authorization model
 - Interviewer sees `<audio controls>` playback per question on the session review page before filling the scorecard
+- **Superseded by Feature 12** — audio-only recording was upgraded to video; see below.
+
+### 11. Time Limit for Questions ✅
+- `Question.timeLimit` (int, seconds), defaults to `120` via `@Builder.Default` + a DB column default, so `ddl-auto=update` could add the column without breaking the 25 already-seeded questions
+- Interviewers set it on the Question Bank add/edit form (10–1800s); `QuestionRequest`/`QuestionResponse` and `SessionQuestionResponse` all carry it through
+- Candidate's session page counts down from the question's `timeLimit` once recording starts, turns red in the last 30 seconds, and at 0 auto-stops the recording (same path as a manual stop) and advances to the next question — except on the last question, where it just stops/uploads and leaves the candidate there
+- The auto-stop/advance logic lives in a `useEffect` watching `timeLeft`, not inside the `setTimeLeft` updater — `main.jsx` wraps the app in `<StrictMode>`, which can invoke updater functions more than once, risking a double-upload or skipping two questions instead of one
+- Considered adding a per-session override on top of the question's default (editable when picking questions for a session) but declined it — the Question Bank's existing "set once, reuse everywhere" model already covered what was actually requested, and an override would've added a nullable `SessionQuestion.timeLimitOverride` column and a more complex picker UI for a scenario nobody asked for
+
+### 12. Video Recording (upgrade from Voice Recording) ✅
+- Candidate's `getUserMedia({ video: true, audio: true })` replaces the old audio-only capture; `MediaRecorder` and the uploaded blob use `video/webm`
+- Live, muted self-preview `<video>` shown only while actively recording — wired via a `useEffect` watching `isRecording`, not set inline inside `startRecording()`, since the preview element doesn't exist in the DOM yet at that point on the very first recording (it's only mounted once `isRecording` becomes true)
+- Interviewer's playback swapped from `<audio controls>` to `<video controls>`
+- `RecordingController`/`RecordingService.getAudio()` renamed to `getVideo()`, endpoint `/recordings/{questionId}/audio` renamed to `/video`, response `Content-Type` changed from `audio/webm` to `video/webm`
+- `spring.servlet.multipart.max-file-size`/`max-request-size` raised from 25MB to 100MB, since video is significantly larger than audio-only at the same duration
+- Two things this upgrade did **not** require, worth knowing if asked: no Cloudinary config change (uploads already used `resource_type: "video"`, since Cloudinary has no dedicated audio type) and no DB migration (`SessionRecording.filePath` was always a generic URL column, agnostic to content type)
+- `docs/features/voice-recording.md` renamed to `video-recording.md`, all cross-references updated
 
 ---
 
@@ -175,7 +192,7 @@ No new table. Fetches all `Scorecard` rows for a candidate ordered by session da
 | Table | Key columns |
 |---|---|
 | `users` | id, name, email (unique), password (BCrypt), role |
-| `questions` | id, title, role, topic, difficulty |
+| `questions` | id, title, role, topic, difficulty, time_limit (default 120) |
 | `sessions` | id, interviewer_id, candidate_id, date, scheduled_at, status |
 | `session_questions` | id, session_id, question_id, question_order |
 | `scorecards` | id, session_id (unique), candidate_id, communication, structure, content, confidence, comments |

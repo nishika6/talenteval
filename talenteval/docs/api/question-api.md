@@ -34,14 +34,16 @@ Authorization: Bearer <token>
     "title": "Design a URL shortening service like bit.ly",
     "role": "ENGINEERING",
     "topic": "System Design",
-    "difficulty": "HARD"
+    "difficulty": "HARD",
+    "timeLimit": 180
   },
   {
     "id": 2,
     "title": "Explain the difference between TCP and UDP",
     "role": "ENGINEERING",
     "topic": "System Design",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "timeLimit": 120
   }
 ]
 ```
@@ -68,7 +70,8 @@ Authorization: Bearer <token>
   "title": "Design a URL shortening service like bit.ly",
   "role": "ENGINEERING",
   "topic": "System Design",
-  "difficulty": "HARD"
+  "difficulty": "HARD",
+  "timeLimit": 180
 }
 ```
 
@@ -94,7 +97,8 @@ Create a new question.
   "title": "How would you handle a conflict between two team members?",
   "role": "HR",
   "topic": "Conflict Resolution",
-  "difficulty": "MEDIUM"
+  "difficulty": "MEDIUM",
+  "timeLimit": 150
 }
 ```
 
@@ -104,6 +108,7 @@ Create a new question.
 | role | String | Required, must be HR / UX / PM / FINANCE / ENGINEERING | Target interview role |
 | topic | String | Required, not blank | Topic category |
 | difficulty | String | Required, must be EASY / MEDIUM / HARD | Difficulty level |
+| timeLimit | Integer | Optional, 10–1800 seconds. Defaults to 120 if omitted | How long the candidate has to record an answer before it auto-stops |
 
 **Success response (200 OK):**
 
@@ -113,7 +118,8 @@ Create a new question.
   "title": "How would you handle a conflict between two team members?",
   "role": "HR",
   "topic": "Conflict Resolution",
-  "difficulty": "MEDIUM"
+  "difficulty": "MEDIUM",
+  "timeLimit": 150
 }
 ```
 
@@ -140,7 +146,8 @@ Update an existing question.
   "title": "How would you resolve a conflict between two team members?",
   "role": "HR",
   "topic": "Conflict Resolution",
-  "difficulty": "HARD"
+  "difficulty": "HARD",
+  "timeLimit": 180
 }
 ```
 
@@ -152,7 +159,8 @@ Update an existing question.
   "title": "How would you resolve a conflict between two team members?",
   "role": "HR",
   "topic": "Conflict Resolution",
-  "difficulty": "HARD"
+  "difficulty": "HARD",
+  "timeLimit": 180
 }
 ```
 

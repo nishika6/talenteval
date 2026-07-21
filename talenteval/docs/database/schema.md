@@ -31,6 +31,7 @@ Stores the question bank. Pre-seeded with default questions on first run.
 | role | ENUM('HR', 'UX', 'PM', 'FINANCE', 'ENGINEERING') | NOT NULL | Target interview role |
 | topic | VARCHAR(255) | NOT NULL | Topic category (e.g., "Behavioral", "System Design") |
 | difficulty | ENUM('EASY', 'MEDIUM', 'HARD') | NOT NULL | Difficulty level |
+| time_limit | INT | NOT NULL, DEFAULT 120 | Seconds a candidate has to record an answer before it auto-stops |
 
 ---
 

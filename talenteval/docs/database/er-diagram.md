@@ -18,6 +18,7 @@ erDiagram
         enum role "HR | UX | PM | FINANCE | ENGINEERING"
         varchar topic
         enum difficulty "EASY | MEDIUM | HARD"
+        int time_limit "default 120"
     }
 
     SESSIONS {

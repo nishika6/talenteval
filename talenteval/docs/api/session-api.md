@@ -130,7 +130,8 @@ Authorization: Bearer <token>
         "role": "ENGINEERING",
         "topic": "System Design",
         "difficulty": "HARD",
-        "questionOrder": 1
+        "questionOrder": 1,
+        "timeLimit": 180
       }
     ]
   }
@@ -164,7 +165,8 @@ Get a specific session by ID.
       "role": "ENGINEERING",
       "topic": "System Design",
       "difficulty": "HARD",
-      "questionOrder": 1
+      "questionOrder": 1,
+      "timeLimit": 180
     }
   ]
 }
@@ -208,7 +210,8 @@ Add questions to an in-progress session.
       "role": "ENGINEERING",
       "topic": "System Design",
       "difficulty": "HARD",
-      "questionOrder": 1
+      "questionOrder": 1,
+      "timeLimit": 180
     },
     {
       "id": 5,
@@ -216,7 +219,8 @@ Add questions to an in-progress session.
       "role": "HR",
       "topic": "Behavioral",
       "difficulty": "EASY",
-      "questionOrder": 2
+      "questionOrder": 2,
+      "timeLimit": 120
     },
     {
       "id": 12,
@@ -224,7 +228,8 @@ Add questions to an in-progress session.
       "role": "PM",
       "topic": "Product Strategy",
       "difficulty": "MEDIUM",
-      "questionOrder": 3
+      "questionOrder": 3,
+      "timeLimit": 120
     }
   ]
 }
@@ -247,7 +252,7 @@ Mark a session as completed.
 
 - If the **interviewer** completes it, they're taken straight to the scorecard form.
 - If the **candidate** completes it, they're returned to the session list, and the interviewer is emailed (see [email-notifications.md](../features/email-notifications.md)).
-- A candidate must have recorded an answer for every question in the session before they're allowed to complete it (see [voice-recording.md](../features/voice-recording.md)) — this restriction does not apply to the interviewer.
+- A candidate must have recorded an answer for every question in the session before they're allowed to complete it (see [video-recording.md](../features/video-recording.md)) — this restriction does not apply to the interviewer.
 
 **Example request:**
 ```

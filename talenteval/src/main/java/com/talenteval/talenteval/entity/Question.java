@@ -29,4 +29,8 @@ public class Question {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Difficulty difficulty;
+
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 120")
+    @Builder.Default
+    private int timeLimit = 120;
 }

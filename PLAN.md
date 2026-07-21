@@ -1,8 +1,8 @@
 # TalentEval — Project Plan
 
 ## Current Status
-- Feature: 10 features complete + 3 fixes
-- Last completed: Forgot Password
+- Feature: 12 features complete + 3 fixes
+- Last completed: Video Recording (upgrade from Voice Recording)
 - `main` is fully up to date — all features and fixes below are merged into `main`
 
 ## Features
@@ -85,7 +85,26 @@
 - [x] Interviewer sees `<audio controls>` playback per question on the session review page, before filling the scorecard
 - [x] Started with local filesystem storage (`LocalRecordingStorageService`), confirmed working end-to-end
 - [x] Migrated to **Cloudinary** cloud storage (`CloudinaryRecordingStorageService`) after a senior flagged that local files risk data loss and don't scale for concurrent users; local implementation removed once Cloudinary was confirmed working
-- [x] Frontend never talks to Cloudinary directly — `GET /sessions/{id}/recordings/{questionId}/audio` is an authenticated proxy endpoint that fetches from Cloudinary server-side and streams bytes back
+- [x] Frontend never talks to Cloudinary directly — an authenticated proxy endpoint fetches from Cloudinary server-side and streams bytes back
+- **Superseded by Feature 12** — audio-only recording was upgraded to video; see below.
+
+### 11. Time Limit for Questions
+- [x] Added `timeLimit` field (int, seconds) to the `Question` entity, defaulting to `120` via `@Builder.Default` and a DB-level column default so the existing seeded questions get `120` automatically
+- [x] `QuestionRequest` accepts optional `timeLimit` (10–1800 seconds), defaults to 120 if omitted, on both create and update
+- [x] Interviewers set a question's time limit on the Question Bank add/edit form; shown as a badge on each question card
+- [x] `SessionQuestionResponse` carries `timeLimit` through so the candidate's session view receives it per question
+- [x] Candidate's session page shows a countdown from the question's time limit once recording starts, turning red in the last 30 seconds
+- [x] At 0, recording auto-stops (same upload path as manual stop) and advances to the next question — except on the last question, where it stops/uploads and leaves the candidate there for the existing "Complete Session" action
+- [x] Considered and declined a per-session override of time limit on top of the Question Bank default — decided the Question Bank's "set once, reuse everywhere" model was sufficient for what was actually requested
+
+### 12. Video Recording (upgrade from Voice Recording)
+- [x] `getUserMedia({ video: true, audio: true })` replaces the audio-only capture; `MediaRecorder` and the uploaded blob now use `video/webm`
+- [x] Live, muted self-preview `<video>` shown only while actively recording, wired via a `useEffect` on `isRecording` rather than inline in `startRecording()`, since the preview element isn't mounted yet at that point on the very first recording
+- [x] Interviewer's playback swapped from `<audio controls>` to `<video controls>`
+- [x] `RecordingController`/`RecordingService`: `getAudio()` renamed to `getVideo()`, endpoint path `/recordings/{questionId}/audio` renamed to `/video`, response `Content-Type` changed from `audio/webm` to `video/webm`
+- [x] `spring.servlet.multipart.max-file-size`/`max-request-size` raised from 25MB to 100MB — video is significantly larger than audio-only at the same duration
+- [x] Confirmed no Cloudinary config change or DB migration was needed — uploads already used `resource_type: "video"`, and `SessionRecording.filePath` was always a generic URL column
+- [x] Renamed `docs/features/voice-recording.md` → `video-recording.md` and updated every cross-reference to it
 
 ## Fixes
 

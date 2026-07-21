@@ -1,6 +1,6 @@
 # TalentEval
 
-A role-agnostic mock interview and talent evaluation platform. An interviewer creates a session for a candidate and picks questions; the candidate records a spoken answer for each question independently, on their own time; the interviewer reviews the recordings and fills a structured scorecard; the candidate tracks their scores and feedback over time. TalentEval is interviewer-led but asynchronous — the two participants don't need to be online at the same time.
+A role-agnostic mock interview and talent evaluation platform. An interviewer creates a session for a candidate and picks questions; the candidate records a video answer for each question independently, on their own time; the interviewer reviews the recordings and fills a structured scorecard; the candidate tracks their scores and feedback over time. TalentEval is interviewer-led but asynchronous — the two participants don't need to be online at the same time.
 
 ## Roles
 
@@ -10,13 +10,13 @@ A role-agnostic mock interview and talent evaluation platform. An interviewer cr
 ## Features
 
 1. **User Authentication** — email/password login (with alias-proof email normalization), JWT sessions, BCrypt hashing, role selected at registration, self-service password reset via email
-2. **Question Bank** — questions tagged by role (HR/UX/PM/Finance/Engineering), topic, and difficulty; interviewers manage them, candidates browse read-only
+2. **Question Bank** — questions tagged by role (HR/UX/PM/Finance/Engineering), topic, difficulty, and a per-question recording time limit; interviewers manage them, candidates browse read-only
 3. **Mock Interview Session** — interviewer selects a candidate and picks questions; candidate works through them independently and completes the session once every question is recorded
 4. **Scorecard** — interviewer rates the candidate 1-5 on Communication, Structure, Content, and Confidence, with optional comments visible to the candidate
 5. **Progress Dashboard** — candidates (and interviewers, for any candidate) see score trends across sessions over time, plus upcoming/scheduled sessions
 6. **Scheduler** — interviewer can set a date/time for a session at creation
 7. **Email Notifications** — candidate is emailed when assigned a session, interviewer is emailed when the candidate completes it
-8. **Voice Recording** — candidate records a spoken answer per question via the browser microphone; stored in Cloudinary, played back by the interviewer through an authenticated proxy endpoint
+8. **Video Recording** — candidate records a video answer per question via the browser camera and microphone, with a live self-preview and a per-question countdown timer; stored in Cloudinary, played back by the interviewer through an authenticated proxy endpoint
 
 ## Tech Stack
 

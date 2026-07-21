@@ -64,11 +64,11 @@ spring.mail.password=${MAIL_PASSWORD}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
-# Voice recordings — max upload size
-spring.servlet.multipart.max-file-size=25MB
-spring.servlet.multipart.max-request-size=25MB
+# Video recordings — max upload size
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=100MB
 
-# Cloudinary — required for voice recording storage
+# Cloudinary — required for video recording storage
 cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME}
 cloudinary.api-key=${CLOUDINARY_API_KEY}
 cloudinary.api-secret=${CLOUDINARY_API_SECRET}

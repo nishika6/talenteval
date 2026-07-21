@@ -33,13 +33,13 @@ public class RecordingController {
         return ResponseEntity.ok(recordingService.getRecordings(sessionId, auth.getName()));
     }
 
-    @GetMapping("/{questionId}/audio")
-    public ResponseEntity<byte[]> getAudio(@PathVariable Long sessionId,
+    @GetMapping("/{questionId}/video")
+    public ResponseEntity<byte[]> getVideo(@PathVariable Long sessionId,
                                             @PathVariable Long questionId,
                                             Authentication auth) {
-        byte[] audio = recordingService.getAudio(sessionId, questionId, auth.getName());
+        byte[] video = recordingService.getVideo(sessionId, questionId, auth.getName());
         return ResponseEntity.ok()
-                .contentType(MediaType.valueOf("audio/webm"))
-                .body(audio);
+                .contentType(MediaType.valueOf("video/webm"))
+                .body(video);
     }
 }

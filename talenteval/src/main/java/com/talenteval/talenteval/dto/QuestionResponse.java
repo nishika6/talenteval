@@ -12,4 +12,5 @@ public class QuestionResponse {
     private String role;
     private String topic;
     private String difficulty;
+    private int timeLimit;
 }

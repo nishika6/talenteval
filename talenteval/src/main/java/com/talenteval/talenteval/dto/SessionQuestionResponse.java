@@ -13,4 +13,5 @@ public class SessionQuestionResponse {
     private String topic;
     private String difficulty;
     private int questionOrder;
+    private int timeLimit;
 }

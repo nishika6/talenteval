@@ -46,6 +46,7 @@ public class QuestionService {
                 .role(InterviewRole.valueOf(request.getRole()))
                 .topic(request.getTopic())
                 .difficulty(Difficulty.valueOf(request.getDifficulty()))
+                .timeLimit(request.getTimeLimit() != null ? request.getTimeLimit() : 120)
                 .build();
 
         questionRepository.save(question);
@@ -60,6 +61,7 @@ public class QuestionService {
         question.setRole(InterviewRole.valueOf(request.getRole()));
         question.setTopic(request.getTopic());
         question.setDifficulty(Difficulty.valueOf(request.getDifficulty()));
+        question.setTimeLimit(request.getTimeLimit() != null ? request.getTimeLimit() : 120);
 
         questionRepository.save(question);
         return toResponse(question);
@@ -78,7 +80,8 @@ public class QuestionService {
                 question.getTitle(),
                 question.getRole().name(),
                 question.getTopic(),
-                question.getDifficulty().name()
+                question.getDifficulty().name(),
+                question.getTimeLimit()
         );
     }
 }

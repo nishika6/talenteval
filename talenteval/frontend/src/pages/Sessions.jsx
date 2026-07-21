@@ -38,15 +38,18 @@ export default function Sessions() {
   });
   const [scorecardError, setScorecardError] = useState('');
 
-  // Voice recording
+  // Video recording
   const [recordings, setRecordings] = useState([]);
-  const [audioUrls, setAudioUrls] = useState({});
+  const [videoUrls, setVideoUrls] = useState({});
   const [isRecording, setIsRecording] = useState(false);
   const [uploadingRecording, setUploadingRecording] = useState(false);
   const [recordingError, setRecordingError] = useState('');
+  const [timeLeft, setTimeLeft] = useState(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
+  const timerRef = useRef(null);
+  const previewRef = useRef(null);
 
   const roles = ['HR', 'UX', 'PM', 'FINANCE', 'ENGINEERING'];
 
@@ -80,7 +83,7 @@ export default function Sessions() {
 
   useEffect(() => {
     if (activeSession && (step === 'interview' || step === 'view')) {
-      setAudioUrls({});
+      setVideoUrls({});
       fetchRecordings(activeSession.id);
     }
   }, [activeSession?.id, step]);
@@ -90,13 +93,13 @@ export default function Sessions() {
   useEffect(() => {
     if (isInterviewer && step === 'view' && activeSession?.status === 'COMPLETED') {
       const current = activeSession.questions[currentQ];
-      if (current && !audioUrls[current.id]) {
+      if (current && !videoUrls[current.id]) {
         const rec = recordings.find(r => r.questionId === current.id);
         if (rec) {
           api.get(rec.url, { responseType: 'blob' })
             .then(res => {
               const url = URL.createObjectURL(res.data);
-              setAudioUrls(prev => ({ ...prev, [current.id]: url }));
+              setVideoUrls(prev => ({ ...prev, [current.id]: url }));
             })
             .catch(() => {});
         }
@@ -107,32 +110,68 @@ export default function Sessions() {
   const startRecording = async () => {
     setRecordingError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       streamRef.current = stream;
       chunksRef.current = [];
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
         streamRef.current?.getTracks().forEach(t => t.stop());
+        if (previewRef.current) {
+          previewRef.current.srcObject = null;
+        }
         uploadRecording();
       };
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
+
+      const limit = activeSession.questions[currentQ].timeLimit;
+      setTimeLeft(limit);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => (prev !== null ? prev - 1 : prev));
+      }, 1000);
     } catch {
-      setRecordingError('Microphone access is required to record your answer.');
+      setRecordingError('Camera and microphone access is required to record your answer.');
     }
   };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setTimeLeft(null);
   };
 
+  useEffect(() => {
+    if (isRecording && timeLeft === 0) {
+      stopRecording();
+      setCurrentQ((q) => {
+        const qs = activeSession.questions;
+        return q < qs.length - 1 ? q + 1 : q;
+      });
+    }
+  }, [timeLeft]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isRecording && previewRef.current && streamRef.current) {
+      previewRef.current.srcObject = streamRef.current;
+    }
+  }, [isRecording]);
+
   const uploadRecording = async () => {
-    const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+    const blob = new Blob(chunksRef.current, { type: 'video/webm' });
     const current = activeSession.questions[currentQ];
     setUploadingRecording(true);
     setRecordingError('');
@@ -486,6 +525,15 @@ export default function Sessions() {
                 {!isInterviewer && activeSession.status === 'IN_PROGRESS' && (
                   <div style={{ marginTop: '20px' }}>
                     {recordingError && <div className="auth-error">{recordingError}</div>}
+                    {isRecording && (
+                      <video
+                        ref={previewRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        style={{ width: '100%', maxHeight: '360px', background: '#000', borderRadius: '8px', marginBottom: '12px' }}
+                      />
+                    )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {recordedIds.has(current.id) && !isRecording && (
                         <span className="badge badge-easy">Recorded ✓</span>
@@ -497,13 +545,24 @@ export default function Sessions() {
                           {uploadingRecording ? 'Uploading...' : recordedIds.has(current.id) ? 'Re-record' : 'Start Recording'}
                         </button>
                       )}
+                      {isRecording && timeLeft !== null && (
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            fontSize: '16px',
+                            color: timeLeft <= 30 ? 'var(--error)' : 'inherit',
+                          }}
+                        >
+                          {String(Math.floor(timeLeft / 60)).padStart(1, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {isInterviewer && activeSession.status === 'COMPLETED' && audioUrls[current.id] && (
+                {isInterviewer && activeSession.status === 'COMPLETED' && videoUrls[current.id] && (
                   <div style={{ marginTop: '20px' }}>
-                    <audio controls src={audioUrls[current.id]} style={{ width: '100%' }} />
+                    <video controls src={videoUrls[current.id]} style={{ width: '100%', maxHeight: '400px', background: '#000', borderRadius: '8px' }} />
                   </div>
                 )}
               </div>

@@ -2,14 +2,14 @@
 
 ## What It Does
 
-Provides a centralized bank of interview questions organized by role, topic, and difficulty. Interviewers can create, edit, and delete questions. Candidates can browse and filter them but cannot modify them. The system comes pre-seeded with default questions across all five roles on first startup.
+Provides a centralized bank of interview questions organized by role, topic, and difficulty, each with a time limit for recording an answer. Interviewers can create, edit, and delete questions. Candidates can browse and filter them but cannot modify them. The system comes pre-seeded with default questions across all five roles on first startup.
 
 ## How It Works End to End
 
 ### Interviewer: Adding a Question
 
 1. Interviewer navigates to the **Question Bank** page.
-2. Clicks "Add Question" and fills in the title, selects a role (HR / UX / PM / Finance / Engineering), enters a topic, and picks a difficulty level (Easy / Medium / Hard).
+2. Clicks "Add Question" and fills in the title, selects a role (HR / UX / PM / Finance / Engineering), enters a topic, picks a difficulty level (Easy / Medium / Hard), and optionally sets a time limit in seconds (defaults to 120 if left as-is).
 3. React sends a `POST /api/questions` request with the question data.
 4. The backend validates that the user has the INTERVIEWER role (via `@PreAuthorize`), validates the input fields, and saves the question to the `questions` table.
 5. The new question appears in the list.
@@ -42,5 +42,6 @@ Provides a centralized bank of interview questions organized by role, topic, and
 - Every question must have a title, role, topic, and difficulty.
 - Valid roles: HR, UX, PM, FINANCE, ENGINEERING.
 - Valid difficulties: EASY, MEDIUM, HARD.
+- Time limit is optional on the form; defaults to 120 seconds if not set, and must be between 10 and 1800 seconds if it is. This is the time a candidate gets to record an answer to this question (see [video-recording.md](video-recording.md)).
 - Questions can be used across multiple interview sessions.
 - Deleting a question does not affect past sessions that used it (the session retains a reference).

@@ -64,7 +64,7 @@ public class RecordingService {
                 .toList();
     }
 
-    public byte[] getAudio(Long sessionId, Long questionId, String callerEmail) {
+    public byte[] getVideo(Long sessionId, Long questionId, String callerEmail) {
         getSessionForParticipant(sessionId, callerEmail);
 
         SessionRecording recording = recordingRepository.findBySessionIdAndQuestionId(sessionId, questionId)
@@ -94,7 +94,7 @@ public class RecordingService {
     private RecordingResponse toResponse(SessionRecording recording) {
         Long sessionId = recording.getSession().getId();
         Long questionId = recording.getQuestion().getId();
-        String url = "/sessions/" + sessionId + "/recordings/" + questionId + "/audio";
+        String url = "/sessions/" + sessionId + "/recordings/" + questionId + "/video";
         return new RecordingResponse(questionId, url);
     }
 }
